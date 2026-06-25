@@ -1,3 +1,53 @@
+// using FinAxisLeaseBudgeting.Data;
+// using FinAxisLeaseBudgeting.Interfaces;
+// using FinAxisLeaseBudgeting.Models;
+// using FinAxisLeaseBudgeting.RepositorieS;
+// using Microsoft.EntityFrameworkCore;
+
+// var builder = WebApplication.CreateBuilder(args);
+
+// var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// builder.Services.AddDbContext<FinAxisDbContext>(options =>
+//     options.UseNpgsql(connectionString));
+
+// // Add services to the container.
+
+// builder.Services.AddControllers();
+
+
+// //Register the repository dependency
+
+// builder.Services.AddScoped<ICommLeaseRepository, CommLeaseRepository>();
+// builder.Services.AddScoped<ICommContactRepository, CommContactRepository>();
+// builder.Services.AddScoped<ICommCustomerRepository, CommCustomerRepository>();
+// builder.Services.AddScoped<ICommLeaseUnitRepository, CommLeaseUnitRepository>();
+
+
+// // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// builder.Services.AddOpenApi();
+// builder.Services.Configure<PowerBISettings>(builder.Configuration.GetSection("PowerBI"));
+
+// var app = builder.Build();
+
+// // Configure the HTTP request pipeline.
+// if (app.Environment.IsDevelopment())
+// {
+//     app.MapOpenApi(); // <-- Must be here
+//     app.UseSwaggerUI(options =>
+//     {
+//         options.SwaggerEndpoint("/openapi/v1.json", "FinAxis API v1");
+//     });
+// }
+
+// app.UseHttpsRedirection();
+
+// app.UseAuthorization();
+
+// app.MapControllers();
+
+// app.Run();
+
+
 using FinAxisLeaseBudgeting.Data;
 using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.Models;
@@ -11,17 +61,13 @@ builder.Services.AddDbContext<FinAxisDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 
-
-//Register the repository dependency
-
+// Register the repository dependency
 builder.Services.AddScoped<ICommLeaseRepository, CommLeaseRepository>();
 builder.Services.AddScoped<ICommContactRepository, CommContactRepository>();
 builder.Services.AddScoped<ICommCustomerRepository, CommCustomerRepository>();
 builder.Services.AddScoped<ICommLeaseUnitRepository, CommLeaseUnitRepository>();
-
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -29,17 +75,17 @@ builder.Services.Configure<PowerBISettings>(builder.Configuration.GetSection("Po
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// --- MOVED OUTSIDE OF IsDevelopment() FOR PRODUCTION DEPLOYMENT ---
+app.MapOpenApi(); 
+app.UseSwaggerUI(options =>
 {
-    app.MapOpenApi(); // <-- Must be here
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/openapi/v1.json", "FinAxis API v1");
-    });
-}
+    options.SwaggerEndpoint("/openapi/v1.json", "FinAxis API v1");
+    options.RoutePrefix = "swagger"; // Maps Swagger UI directly to the /swagger path
+});
+// -----------------------------------------------------------------
 
-app.UseHttpsRedirection();
+// Commented out to prevent Docker/Render redirect issues (Render handles HTTPS automatically)
+// app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
