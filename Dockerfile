@@ -17,7 +17,7 @@ WORKDIR /app
 COPY --from=build-env /app/out .
 
 # Correctly bind to 0.0.0.0 so Render's port scanner can find it
-ENV ASPNETCORE_HTTP_PORTS=0.0.0.0:${PORT}
+ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
 
 EXPOSE 10000
 
