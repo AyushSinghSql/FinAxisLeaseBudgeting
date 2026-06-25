@@ -60,35 +60,39 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<FinAxisDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// Add services to the container.
+// 1. ADD THIS LINE: Configure CORS to allow your local environment and Swagger
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddControllers();
 
-// Register the repository dependency
 builder.Services.AddScoped<ICommLeaseRepository, CommLeaseRepository>();
 builder.Services.AddScoped<ICommContactRepository, CommContactRepository>();
 builder.Services.AddScoped<ICommCustomerRepository, CommCustomerRepository>();
 builder.Services.AddScoped<ICommLeaseUnitRepository, CommLeaseUnitRepository>();
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.Configure<PowerBISettings>(builder.Configuration.GetSection("PowerBI"));
 
 var app = builder.Build();
 
-// --- MOVED OUTSIDE OF IsDevelopment() FOR PRODUCTION DEPLOYMENT ---
+// 2. ADD THIS LINE: Enable CORS middleware right after app builds
+app.UseCors();
+
 app.MapOpenApi(); 
 app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/openapi/v1.json", "FinAxis API v1");
-    options.RoutePrefix = "swagger"; // Maps Swagger UI directly to the /swagger path
+    options.RoutePrefix = "swagger";
 });
-// -----------------------------------------------------------------
-
-// Commented out to prevent Docker/Render redirect issues (Render handles HTTPS automatically)
-// app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
