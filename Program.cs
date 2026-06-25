@@ -1,5 +1,6 @@
 using FinAxisLeaseBudgeting.Data;
 using FinAxisLeaseBudgeting.Interfaces;
+using FinAxisLeaseBudgeting.Models;
 using FinAxisLeaseBudgeting.RepositorieS;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +25,7 @@ builder.Services.AddScoped<ICommLeaseUnitRepository, CommLeaseUnitRepository>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.Configure<PowerBISettings>(builder.Configuration.GetSection("PowerBI"));
 
 var app = builder.Build();
 
