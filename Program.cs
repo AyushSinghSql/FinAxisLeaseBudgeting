@@ -62,6 +62,8 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<FinAxisDbContext>(options =>
     options.UseNpgsql(connectionString));
+builder.Services.AddHttpClient();
+
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -80,7 +82,8 @@ builder.Services.AddScoped<ICommLeaseRepository, CommLeaseRepository>();
 builder.Services.AddScoped<ICommContactRepository, CommContactRepository>();
 builder.Services.AddScoped<ICommCustomerRepository, CommCustomerRepository>();
 builder.Services.AddScoped<ICommLeaseUnitRepository, CommLeaseUnitRepository>();
-
+// ✅ CORRECT: Map the interface to the concrete class
+builder.Services.AddScoped<IUnitRepository, UnitMasterRepository>();
 // --- UPDATE THIS BLOCK: Force HTTPS for OpenAPI/Swagger Requests ---
 builder.Services.AddOpenApi(options =>
 {

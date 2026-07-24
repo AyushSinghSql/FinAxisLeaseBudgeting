@@ -18,6 +18,8 @@ namespace FinAxisLeaseBudgeting.Data
         public DbSet<CommLeaseUnit> CommLeaseUnits { get; set; } = null!;
         public DbSet<CommLease> CommLeases { get; set; } = null!;
 
+        public DbSet<UnitMaster> UnitMasters { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
