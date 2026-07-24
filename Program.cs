@@ -85,15 +85,34 @@ builder.Services.AddScoped<ICommLeaseUnitRepository, CommLeaseUnitRepository>();
 // ✅ CORRECT: Map the interface to the concrete class
 builder.Services.AddScoped<IUnitRepository, UnitMasterRepository>();
 // --- UPDATE THIS BLOCK: Force HTTPS for OpenAPI/Swagger Requests ---
+// --- Add Local and Production Servers to OpenAPI ---
+// --- Environment-aware OpenAPI Servers ---
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
-        // This forces the "Try it out" button to execute over HTTPS on Render
-        document.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
+        if (builder.Environment.IsDevelopment())
         {
-            new Microsoft.OpenApi.Models.OpenApiServer { Url = "https://finaxisleasebudgeting.onrender.com" }
-        };
+            document.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
+            {
+                new Microsoft.OpenApi.Models.OpenApiServer
+                {
+                    Url = "https://localhost:7000",
+                    Description = "Local Development"
+                }
+            };
+        }
+        else
+        {
+            document.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
+            {
+                new Microsoft.OpenApi.Models.OpenApiServer
+                {
+                    Url = "https://finaxisleasebudgeting.onrender.com",
+                    Description = "Production Server"
+                }
+            };
+        }
         return Task.CompletedTask;
     });
 });

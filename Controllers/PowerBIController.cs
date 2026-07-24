@@ -208,7 +208,7 @@ namespace FinAxisLeaseBudgeting.Controllers
 
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-            var workspaceResponse = await client.GetAsync("https://api/powerbi.com/v1.0/myorg/groups");
+            var workspaceResponse = await client.GetAsync("https://api.powerbi.com/v1.0/myorg/groups");
 
             workspaceResponse.EnsureSuccessStatusCode();
 
