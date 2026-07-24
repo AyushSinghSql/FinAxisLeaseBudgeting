@@ -82,11 +82,11 @@ builder.Services.AddScoped<ICommLeaseRepository, CommLeaseRepository>();
 builder.Services.AddScoped<ICommContactRepository, CommContactRepository>();
 builder.Services.AddScoped<ICommCustomerRepository, CommCustomerRepository>();
 builder.Services.AddScoped<ICommLeaseUnitRepository, CommLeaseUnitRepository>();
-// ✅ CORRECT: Map the interface to the concrete class
+
 builder.Services.AddScoped<IUnitRepository, UnitMasterRepository>();
-// --- UPDATE THIS BLOCK: Force HTTPS for OpenAPI/Swagger Requests ---
-// --- Add Local and Production Servers to OpenAPI ---
-// --- Environment-aware OpenAPI Servers ---
+builder.Services.AddScoped<ILeaseRepository, LeaseMasterRepository>();
+
+
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
