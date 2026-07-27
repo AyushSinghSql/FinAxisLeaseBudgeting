@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using Microsoft.AspNetCore.Components.Web;
+using System.Net;
 using System.Text.Json;
 
 namespace FinAxisLeaseBudgeting.Middleware
@@ -21,6 +22,11 @@ namespace FinAxisLeaseBudgeting.Middleware
             try
             {
                 await _next(context);
+
+                if (true)
+                {
+                    throw ErrorBoundary()
+                }
 
                 // Handle missing URL routes
                 if (context.Response.StatusCode == (int)HttpStatusCode.NotFound && !context.Response.HasStarted)

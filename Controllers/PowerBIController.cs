@@ -118,7 +118,9 @@ namespace FinAxisLeaseBudgeting.Controllers
             {
                 ReportId = reportId,
                 EmbedUrl = embedUrl,
-                EmbedToken = tokenJson.token
+                EmbedToken = tokenJson.token,
+                DatasetId = datasetId,
+                DatasetName = datasetName,
             });
         }
 
@@ -194,6 +196,90 @@ namespace FinAxisLeaseBudgeting.Controllers
         }
 
 
+        //[HttpGet("BiReport_List")]
+        //public async Task<IActionResult> GetBiReportList(string workspaceName)
+        //{
+        //    if (string.IsNullOrWhiteSpace(workspaceName))
+        //    {
+        //        return BadRequest("Workspace name is required.");
+        //    }
+
+        //    var accessToken = await GetAccessToken();
+
+        //    using var client = new HttpClient();
+
+        //    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        //    var workspaceResponse = await client.GetAsync("https://api.powerbi.com/v1.0/myorg/groups");
+
+        //    workspaceResponse.EnsureSuccessStatusCode();
+
+        //    var workspaceJson = JsonConvert.DeserializeObject<dynamic>(
+        //        await workspaceResponse.Content.ReadAsStringAsync());
+
+        //    string workspaceId = null;
+
+        //    foreach (var ws in workspaceJson.value)
+        //    {
+        //        string wsName = ws.name;
+        //        if (string.Equals(wsName?.Trim(), workspaceName.Trim(), StringComparison.OrdinalIgnoreCase))
+        //        {
+        //            workspaceId = ws.id;
+        //            break;
+        //        }
+        //    }
+
+        //    if (workspaceId == null)
+        //    {
+        //        return BadRequest($"Workspace '{workspaceName}' not found or no access.");
+        //    }
+
+        //    var reportResponse = await client.GetAsync(
+        //$"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports");
+
+        //    reportResponse.EnsureSuccessStatusCode();
+
+        //    var reportJson = JsonConvert.DeserializeObject<dynamic>(
+        //        await reportResponse.Content.ReadAsStringAsync());
+
+        //    var embedConfigs = new List<EmbedConfig>();
+
+        //    foreach (var report in reportJson.value)
+        //    {
+        //        string reportId = report.id;
+        //        string embedUrl = report.embedUrl;
+
+        //        var tokenRequest = new
+        //        {
+        //            accessLevel = "View"
+        //        };
+
+        //        var content = new StringContent(
+        //            JsonConvert.SerializeObject(tokenRequest),
+        //            Encoding.UTF8,
+        //            "application/json");
+
+        //        var tokenResponse = await client.PostAsync(
+        //            $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports/{reportId}/GenerateToken",
+        //            content);
+
+        //        if (!tokenResponse.IsSuccessStatusCode)
+        //            continue;
+
+        //        var tokenJson = JsonConvert.DeserializeObject<dynamic>(
+        //            await tokenResponse.Content.ReadAsStringAsync());
+
+        //        embedConfigs.Add(new EmbedConfig
+        //        {
+        //            ReportId = reportId,
+        //            EmbedUrl = embedUrl,
+        //            EmbedToken = tokenJson.token
+        //        });
+        //    }
+
+        //    return Ok(embedConfigs);
+        //}
+
         [HttpGet("BiReport_List")]
         public async Task<IActionResult> GetBiReportList(string workspaceName)
         {
@@ -205,11 +291,10 @@ namespace FinAxisLeaseBudgeting.Controllers
             var accessToken = await GetAccessToken();
 
             using var client = new HttpClient();
-
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
+            // 1. Get Workspace ID
             var workspaceResponse = await client.GetAsync("https://api.powerbi.com/v1.0/myorg/groups");
-
             workspaceResponse.EnsureSuccessStatusCode();
 
             var workspaceJson = JsonConvert.DeserializeObject<dynamic>(
@@ -232,9 +317,28 @@ namespace FinAxisLeaseBudgeting.Controllers
                 return BadRequest($"Workspace '{workspaceName}' not found or no access.");
             }
 
-            var reportResponse = await client.GetAsync(
-        $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports");
+            // 2. Fetch Datasets for the workspace and map by Dataset ID for fast lookup
+            var datasetsDict = new Dictionary<string, string>();
+            var datasetResponse = await client.GetAsync($"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/datasets");
 
+            if (datasetResponse.IsSuccessStatusCode)
+            {
+                var datasetJson = JsonConvert.DeserializeObject<dynamic>(
+                    await datasetResponse.Content.ReadAsStringAsync());
+
+                foreach (var ds in datasetJson.value)
+                {
+                    string dsId = ds.id;
+                    string dsName = ds.name;
+                    if (!string.IsNullOrEmpty(dsId) && !datasetsDict.ContainsKey(dsId))
+                    {
+                        datasetsDict[dsId] = dsName;
+                    }
+                }
+            }
+
+            // 3. Fetch Reports for the workspace
+            var reportResponse = await client.GetAsync($"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports");
             reportResponse.EnsureSuccessStatusCode();
 
             var reportJson = JsonConvert.DeserializeObject<dynamic>(
@@ -242,10 +346,19 @@ namespace FinAxisLeaseBudgeting.Controllers
 
             var embedConfigs = new List<EmbedConfig>();
 
+            // 4. Iterate reports and build EmbedConfig list
             foreach (var report in reportJson.value)
             {
                 string reportId = report.id;
                 string embedUrl = report.embedUrl;
+                string datasetId = report.datasetId;
+
+                // Lookup Dataset Name from our dictionary
+                string datasetName = null;
+                if (!string.IsNullOrEmpty(datasetId))
+                {
+                    datasetsDict.TryGetValue(datasetId, out datasetName);
+                }
 
                 var tokenRequest = new
                 {
@@ -271,7 +384,9 @@ namespace FinAxisLeaseBudgeting.Controllers
                 {
                     ReportId = reportId,
                     EmbedUrl = embedUrl,
-                    EmbedToken = tokenJson.token
+                    EmbedToken = tokenJson.token,
+                    DatasetId = datasetId,
+                    DatasetName = datasetName
                 });
             }
 

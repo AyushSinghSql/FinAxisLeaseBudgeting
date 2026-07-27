@@ -12,5 +12,7 @@
         public string ReportId { get; set; }
         public string EmbedUrl { get; set; }
         public string EmbedToken { get; set; }
+        public string DatasetId { get; set; }
+        public string DatasetName { get; set; }
     }
 }
