@@ -20,6 +20,9 @@ namespace FinAxisLeaseBudgeting.Data
         public DbSet<UnitMaster> UnitMasters { get; set; }
         public DbSet<LeaseMaster> LeaseMasters { get; set; }
 
+        public DbSet<PropertyMaster> PropertyMasters { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

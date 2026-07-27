@@ -54,7 +54,9 @@
 using FinAxisLeaseBudgeting.Data;
 using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.Models;
+using FinAxisLeaseBudgeting.Repositories;
 using FinAxisLeaseBudgeting.RepositorieS;
+using FinAxisLeaseBudgeting.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -85,6 +87,9 @@ builder.Services.AddScoped<ICommLeaseUnitRepository, CommLeaseUnitRepository>();
 
 builder.Services.AddScoped<IUnitRepository, UnitMasterRepository>();
 builder.Services.AddScoped<ILeaseRepository, LeaseMasterRepository>();
+
+builder.Services.AddScoped<IPropertyRepository, PropertyMasterRepository>();
+builder.Services.AddScoped<IPropertyService, PropertyMasterService>();
 
 
 builder.Services.AddOpenApi(options =>
