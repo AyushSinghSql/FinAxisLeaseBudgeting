@@ -103,6 +103,8 @@ builder.Services.AddScoped<ILeaseChargeRepository, LeaseChargeRepository>();
 builder.Services.AddScoped<ILeaseChargeService, LeaseChargeService>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
 //Exception Middleware
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
