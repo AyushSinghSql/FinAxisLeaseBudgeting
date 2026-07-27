@@ -57,6 +57,7 @@ using FinAxisLeaseBudgeting.Models;
 using FinAxisLeaseBudgeting.RepositorieS;
 using FinAxisLeaseBudgeting.Services;
 using Microsoft.EntityFrameworkCore;
+using PlanningAPI.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
