@@ -4,13 +4,16 @@ using FinAxisLeaseBudgeting.Middleware;
 using FinAxisLeaseBudgeting.Models;
 using FinAxisLeaseBudgeting.RepositorieS;
 using FinAxisLeaseBudgeting.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using PlanningAPI.Repositories;
 using Serilog;
+using System.Text;
 using System.Text.Json;
 
 Log.Logger = new LoggerConfiguration()
@@ -23,55 +26,43 @@ try
 {
     Log.Information("Starting FinAxis Lease Budgeting Web Application...");
 
+
     var builder = WebApplication.CreateBuilder(args);
 
-    // Read toggle from appsettings.json (defaults to false if missing)
     bool enableAuthorization = builder.Configuration.GetValue<bool>("EnableAuthorization", true);
 
-    // Attach controllers with conditional global authorization filter
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "YourSuperSecretKeyHere12345!"))
+    };
+});
+
     builder.Services.AddControllers(options =>
     {
-        // Require authentication ONLY if NOT in Development AND enableAuthorization setting is true
-        if (!builder.Environment.IsDevelopment() && enableAuthorization)
+        if (enableAuthorization)
         {
+            // 1. Create a policy that requires authenticated users
             var policy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
                 .Build();
 
+            // 2. Apply this policy globally to every single controller action
             options.Filters.Add(new AuthorizeFilter(policy));
-            Log.Information("Global Authorization Filter: ENABLED");
         }
-        else
-        {
-            Log.Information("Global Authorization Filter: DISABLED (Local Development)");
-        }
-    })
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.ReferenceHandler =
-            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-    })
-    .ConfigureApiBehaviorOptions(options =>
-    {
-        options.InvalidModelStateResponseFactory = context =>
-        {
-            var errors = context.ModelState
-                .Where(e => e.Value?.Errors.Count > 0)
-                .ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
-
-            var errorResponse = new
-            {
-                statusCode = 400,
-                message = "Validation failed for one or more fields.",
-                errors = errors,
-                timestamp = DateTime.UtcNow
-            };
-
-            return new BadRequestObjectResult(errorResponse);
-        };
     });
 
     // Attach Serilog as the main logging provider
@@ -97,6 +88,35 @@ try
 
     builder.Services.AddHealthChecks()
         .AddDbContextCheck<FinAxisDbContext>("PostgreSQL Database");
+
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler =
+                System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        })
+        .ConfigureApiBehaviorOptions(options =>
+        {
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                var errors = context.ModelState
+                    .Where(e => e.Value?.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray()
+                    );
+
+                var errorResponse = new
+                {
+                    statusCode = 400,
+                    message = "Validation failed for one or more fields.",
+                    errors = errors,
+                    timestamp = DateTime.UtcNow
+                };
+
+                return new BadRequestObjectResult(errorResponse);
+            };
+        });
 
     builder.Services.AddScoped<ICommLeaseRepository, CommLeaseRepository>();
     builder.Services.AddScoped<ICommContactRepository, CommContactRepository>();
