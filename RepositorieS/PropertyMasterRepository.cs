@@ -91,5 +91,113 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                 })
                 .ToListAsync();
         }
+
+        public async Task<PagedResponse<PropertyBudgetDetailDto>> GetPropertyBudgetDetailsAsync(string? searchTerm = null, int pageNumber = 0, int pageSize = 10)
+        {
+            IQueryable<PropertyMaster> query = _context.PropertyMasters.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var search = searchTerm.Trim().ToLower();
+                query = query.Where(p =>
+                    p.PropertyId.ToLower().Contains(search) ||
+                    p.PropertyCode.ToLower().Contains(search) ||
+                    p.PropertyName.ToLower().Contains(search)
+                );
+            }
+
+            int totalRecords = await query.CountAsync();
+            List<PropertyMaster> properties;
+            int totalPages = 1;
+
+            // Standard pagination logic matching GetPropertiesAsync
+            if (pageNumber > 0 && pageSize > 0)
+            {
+                totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+                properties = await query
+                    .OrderByDescending(p => p.CreatedAt)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+            }
+            else
+            {
+                pageNumber = 0;
+                pageSize = totalRecords;
+                properties = await query
+                    .OrderByDescending(p => p.CreatedAt)
+                    .ToListAsync();
+            }
+
+            // Pull units matching the paginated property IDs
+            var propertyIds = properties.Select(p => p.PropertyId).ToList();
+            var units = await _context.UnitMasters
+                .AsNoTracking()
+                .Where(u => propertyIds.Contains(u.PropertyId))
+                .ToListAsync();
+
+            var data = properties.Select(p =>
+            {
+                var propertyUnits = units.Where(u => u.PropertyId == p.PropertyId).ToList();
+
+                var rentableItemsList = propertyUnits.Select((u, index) => new RentableItemDto
+                {
+                    Id = index + 1,
+                    TypeCode = !string.IsNullOrWhiteSpace(u.UnitType) ? u.UnitType : "PARK",
+                    Desc = !string.IsNullOrWhiteSpace(u.Building) ? u.Building : u.UnitCode,
+                    MarketRent = u.MarketRent?.ToString("F2") ?? "150.00",
+                    OccTable = "OCC_STD",
+                    Items = "45",
+                    ChargeCode = "PRK_CHG",
+                    GlAccount = "4100-02",
+                    InfMethod = "Fixed %",
+                    InfTable = "INF_2026",
+                    InfRate = "3.5"
+                }).ToList();
+
+                if (!rentableItemsList.Any())
+                {
+                    rentableItemsList.Add(new RentableItemDto
+                    {
+                        Id = 1,
+                        TypeCode = "PARK",
+                        Desc = "Covered Parking Structure",
+                        MarketRent = "150.00",
+                        OccTable = "OCC_STD",
+                        Items = "45",
+                        ChargeCode = "PRK_CHG",
+                        GlAccount = "4100-02",
+                        InfMethod = "Fixed %",
+                        InfTable = "INF_2026",
+                        InfRate = "3.5"
+                    });
+                }
+
+                return new PropertyBudgetDetailDto
+                {
+                    Property = p.PropertyCode,
+                    ModelProperty = p.PropertyId,
+                    PropName = p.PropertyName,
+                    MarketType = !string.IsNullOrWhiteSpace(p.PropertyType) ? p.PropertyType : "Commercial",
+                    AddressLine1 = p.Address ?? "",
+                    City = p.City ?? "",
+                    StateZip = p.State ?? "",
+                    Country = !string.IsNullOrWhiteSpace(p.Country) ? p.Country : "in",
+                    CurrencyArea = $"{(!string.IsNullOrWhiteSpace(p.Currency) ? p.Currency : "inr")} |",
+                    LastModified = p.UpdatedAt?.ToString("MM/dd/yyyy h:mm tt") ?? "",
+                    UnitStatus = propertyUnits.FirstOrDefault()?.UnitStatus ?? "Applied",
+                    RentableItems = rentableItemsList
+                };
+            }).ToList();
+
+            return new PagedResponse<PropertyBudgetDetailDto>
+            {
+                Data = data,
+                TotalRecords = totalRecords,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalPages = totalPages
+            };
+        }
     }
 }

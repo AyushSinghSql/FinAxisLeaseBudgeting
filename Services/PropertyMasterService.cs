@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using FinAxisLeaseBudgeting.Interfaces;
+﻿using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace FinAxisLeaseBudgeting.Services
 {
@@ -9,6 +9,7 @@ namespace FinAxisLeaseBudgeting.Services
     {
         Task<PagedResponse<PropertyMaster>> GetPropertiesAsync(string? searchTerm, int pageNumber, int pageSize);
         Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownAsync(string? searchTerm);
+        Task<PagedResponse<PropertyBudgetDetailDto>> GetPropertyBudgetDetailsAsync(string? searchTerm, int pageNumber, int pageSize);
     }
 
     public class PropertyMasterService : IPropertyService
@@ -28,6 +29,11 @@ namespace FinAxisLeaseBudgeting.Services
         public async Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownAsync(string? searchTerm)
         {
             return await _propertyRepository.GetPropertyDropdownAsync(searchTerm);
+        }
+
+        public async Task<PagedResponse<PropertyBudgetDetailDto>> GetPropertyBudgetDetailsAsync(string? searchTerm, int pageNumber, int pageSize)
+        {
+            return await _propertyRepository.GetPropertyBudgetDetailsAsync(searchTerm, pageNumber, pageSize);
         }
     }
 }
