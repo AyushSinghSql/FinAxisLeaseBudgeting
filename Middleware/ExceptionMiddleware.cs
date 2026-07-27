@@ -23,11 +23,6 @@ namespace FinAxisLeaseBudgeting.Middleware
             {
                 await _next(context);
 
-                if (true)
-                {
-                    throw ErrorBoundary()
-                }
-
                 // Handle missing URL routes
                 if (context.Response.StatusCode == (int)HttpStatusCode.NotFound && !context.Response.HasStarted)
                 {
