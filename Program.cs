@@ -25,53 +25,15 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
-    // Read toggle from appsettings.json (defaults to false if missing)
-    bool enableAuthorization = builder.Configuration.GetValue<bool>("EnableAuthorization", true);
-
-    // Attach controllers with conditional global authorization filter
     builder.Services.AddControllers(options =>
     {
-        // Require authentication ONLY if NOT in Development AND enableAuthorization setting is true
-        if (!builder.Environment.IsDevelopment() && enableAuthorization)
-        {
-            var policy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
+        // 1. Create a policy that requires authenticated users
+        var policy = new AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .Build();
 
-            options.Filters.Add(new AuthorizeFilter(policy));
-            Log.Information("Global Authorization Filter: ENABLED");
-        }
-        else
-        {
-            Log.Information("Global Authorization Filter: DISABLED (Local Development)");
-        }
-    })
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.ReferenceHandler =
-            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-    })
-    .ConfigureApiBehaviorOptions(options =>
-    {
-        options.InvalidModelStateResponseFactory = context =>
-        {
-            var errors = context.ModelState
-                .Where(e => e.Value?.Errors.Count > 0)
-                .ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
-
-            var errorResponse = new
-            {
-                statusCode = 400,
-                message = "Validation failed for one or more fields.",
-                errors = errors,
-                timestamp = DateTime.UtcNow
-            };
-
-            return new BadRequestObjectResult(errorResponse);
-        };
+        // 2. Apply this policy globally to every single controller action
+        options.Filters.Add(new AuthorizeFilter(policy));
     });
 
     // Attach Serilog as the main logging provider
@@ -97,6 +59,35 @@ try
 
     builder.Services.AddHealthChecks()
         .AddDbContextCheck<FinAxisDbContext>("PostgreSQL Database");
+
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler =
+                System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        })
+        .ConfigureApiBehaviorOptions(options =>
+        {
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                var errors = context.ModelState
+                    .Where(e => e.Value?.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray()
+                    );
+
+                var errorResponse = new
+                {
+                    statusCode = 400,
+                    message = "Validation failed for one or more fields.",
+                    errors = errors,
+                    timestamp = DateTime.UtcNow
+                };
+
+                return new BadRequestObjectResult(errorResponse);
+            };
+        });
 
     builder.Services.AddScoped<ICommLeaseRepository, CommLeaseRepository>();
     builder.Services.AddScoped<ICommContactRepository, CommContactRepository>();
