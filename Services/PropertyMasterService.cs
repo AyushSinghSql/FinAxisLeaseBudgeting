@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using FinAxisLeaseBudgeting.Repositories;
+using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.Models;
 
 namespace FinAxisLeaseBudgeting.Services
@@ -11,11 +11,11 @@ namespace FinAxisLeaseBudgeting.Services
         Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownAsync(string? searchTerm);
     }
 
-    public class PropertyService : IPropertyService
+    public class PropertyMasterService : IPropertyService
     {
         private readonly IPropertyRepository _propertyRepository;
 
-        public PropertyService(IPropertyRepository propertyRepository)
+        public PropertyMasterService(IPropertyRepository propertyRepository)
         {
             _propertyRepository = propertyRepository;
         }

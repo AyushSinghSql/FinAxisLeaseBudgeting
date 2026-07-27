@@ -16,6 +16,9 @@ namespace FinAxisLeaseBudgeting.Controllers
             _propertyService = propertyService;
         }
 
+        /// <summary>
+        /// GET API for dropdown searching (No pagination - returns array of PropertyId, PropertyCode, PropertyName)
+        /// </summary>
         [HttpGet("dropdown")]
         public async Task<IActionResult> GetPropertyDropdown([FromQuery] string? searchTerm = null)
         {
@@ -23,6 +26,9 @@ namespace FinAxisLeaseBudgeting.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// GET API for retrieving full property records with pagination
+        /// </summary>
         [HttpGet("properties")]
         public async Task<IActionResult> GetProperties(
             [FromQuery] string? searchTerm = null,

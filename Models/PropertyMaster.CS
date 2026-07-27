@@ -73,5 +73,4 @@ namespace FinAxisLeaseBudgeting.Models
         public string PropertyName { get; set; } = string.Empty;
     }
 
-
 }

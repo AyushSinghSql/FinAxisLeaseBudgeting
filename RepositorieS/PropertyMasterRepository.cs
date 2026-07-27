@@ -3,24 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FinAxisLeaseBudgeting.Data;
+using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace FinAxisLeaseBudgeting.Repositories
+namespace FinAxisLeaseBudgeting.RepositorieS
 {
-    public interface IPropertyRepository
-    {
-        Task<PagedResponse<PropertyMaster>> GetPropertiesAsync(string? searchTerm = null, int pageNumber = 0, int pageSize = 10);
-        Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownAsync(string? searchTerm = null);
-    }
-
     public class PropertyMasterRepository : IPropertyRepository
     {
         private readonly FinAxisDbContext _context;
 
-        public PropertyMasterRepository(FinAxisDbContext context) => _context = context;
+        public PropertyMasterRepository(FinAxisDbContext context)
+        {
+            _context = context;
+        }
 
-        // Grid API query (with pagination & full filtering)
         public async Task<PagedResponse<PropertyMaster>> GetPropertiesAsync(string? searchTerm = null, int pageNumber = 0, int pageSize = 10)
         {
             IQueryable<PropertyMaster> query = _context.PropertyMasters.AsNoTracking();
@@ -71,7 +68,6 @@ namespace FinAxisLeaseBudgeting.Repositories
             };
         }
 
-        // Dropdown API query (No pagination, returns IEnumerable)
         public async Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownAsync(string? searchTerm = null)
         {
             IQueryable<PropertyMaster> query = _context.PropertyMasters.AsNoTracking();
