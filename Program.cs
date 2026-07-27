@@ -83,12 +83,16 @@ builder.Services.AddScoped<ICommLeaseRepository, CommLeaseRepository>();
 builder.Services.AddScoped<ICommContactRepository, CommContactRepository>();
 builder.Services.AddScoped<ICommCustomerRepository, CommCustomerRepository>();
 builder.Services.AddScoped<ICommLeaseUnitRepository, CommLeaseUnitRepository>();
-
+//Unit Master Interface
 builder.Services.AddScoped<IUnitRepository, UnitMasterRepository>();
+// Lease Master Interface
 builder.Services.AddScoped<ILeaseRepository, LeaseMasterRepository>();
-
+//Property Master Services / Interface
 builder.Services.AddScoped<IPropertyRepository, PropertyMasterRepository>();
 builder.Services.AddScoped<IPropertyService, PropertyMasterService>();
+//Lease Charge Services / Interface
+builder.Services.AddScoped<ILeaseChargeRepository, LeaseChargeRepository>();
+builder.Services.AddScoped<ILeaseChargeService, LeaseChargeService>();
 
 builder.Services.AddOpenApi(options =>
 {
