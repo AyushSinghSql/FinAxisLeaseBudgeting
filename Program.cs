@@ -53,9 +53,11 @@
 
 using FinAxisLeaseBudgeting.Data;
 using FinAxisLeaseBudgeting.Interfaces;
+using FinAxisLeaseBudgeting.Middleware;
 using FinAxisLeaseBudgeting.Models;
 using FinAxisLeaseBudgeting.RepositorieS;
 using FinAxisLeaseBudgeting.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PlanningAPI.Repositories;
 using System.Text.Json;
@@ -101,6 +103,32 @@ builder.Services.AddScoped<ILeaseChargeRepository, LeaseChargeRepository>();
 builder.Services.AddScoped<ILeaseChargeService, LeaseChargeService>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
+//Exception Middleware
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            // Extract missing field names and error messages automatically
+            var errors = context.ModelState
+                .Where(e => e.Value?.Errors.Count > 0)
+                .ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+
+            var errorResponse = new
+            {
+                statusCode = 400,
+                message = "Validation failed for one or more fields.",
+                errors = errors,
+                timestamp = DateTime.UtcNow
+            };
+
+            return new BadRequestObjectResult(errorResponse);
+        };
+    });
+
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
@@ -136,9 +164,12 @@ builder.Services.Configure<PowerBISettings>(builder.Configuration.GetSection("Po
 
 var app = builder.Build();
 
+//Exception handling (Error Handling)
+app.UseMiddleware<ExceptionMiddleware>();
+
 app.UseCors();
 
-app.MapOpenApi(); 
+app.MapOpenApi();
 app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/openapi/v1.json", "FinAxis API v1");
