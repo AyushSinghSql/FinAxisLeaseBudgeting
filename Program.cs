@@ -4,13 +4,16 @@ using FinAxisLeaseBudgeting.Middleware;
 using FinAxisLeaseBudgeting.Models;
 using FinAxisLeaseBudgeting.RepositorieS;
 using FinAxisLeaseBudgeting.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using PlanningAPI.Repositories;
 using Serilog;
+using System.Text;
 using System.Text.Json;
 
 Log.Logger = new LoggerConfiguration()
@@ -23,17 +26,43 @@ try
 {
     Log.Information("Starting FinAxis Lease Budgeting Web Application...");
 
+
     var builder = WebApplication.CreateBuilder(args);
+
+    bool enableAuthorization = builder.Configuration.GetValue<bool>("EnableAuthorization", true);
+
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "YourSuperSecretKeyHere12345!"))
+    };
+});
 
     builder.Services.AddControllers(options =>
     {
-        // 1. Create a policy that requires authenticated users
-        var policy = new AuthorizationPolicyBuilder()
-            .RequireAuthenticatedUser()
-            .Build();
+        if (enableAuthorization)
+        {
+            // 1. Create a policy that requires authenticated users
+            var policy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
 
-        // 2. Apply this policy globally to every single controller action
-        options.Filters.Add(new AuthorizeFilter(policy));
+            // 2. Apply this policy globally to every single controller action
+            options.Filters.Add(new AuthorizeFilter(policy));
+        }
     });
 
     // Attach Serilog as the main logging provider
