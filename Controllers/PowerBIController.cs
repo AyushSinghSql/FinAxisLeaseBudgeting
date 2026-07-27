@@ -1,4 +1,5 @@
 ﻿using FinAxisLeaseBudgeting.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
@@ -9,6 +10,7 @@ using System.Text;
 
 namespace FinAxisLeaseBudgeting.Controllers
 {
+    [AllowAnonymous]
     [ApiController]
     [Route("api/[controller]")]
     public class PowerBIController : ControllerBase
@@ -288,109 +290,113 @@ namespace FinAxisLeaseBudgeting.Controllers
                 return BadRequest("Workspace name is required.");
             }
 
-            var accessToken = await GetAccessToken();
-
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-            // 1. Get Workspace ID
-            var workspaceResponse = await client.GetAsync("https://api.powerbi.com/v1.0/myorg/groups");
-            workspaceResponse.EnsureSuccessStatusCode();
-
-            var workspaceJson = JsonConvert.DeserializeObject<dynamic>(
-                await workspaceResponse.Content.ReadAsStringAsync());
-
-            string workspaceId = null;
-
-            foreach (var ws in workspaceJson.value)
+            try
             {
-                string wsName = ws.name;
-                if (string.Equals(wsName?.Trim(), workspaceName.Trim(), StringComparison.OrdinalIgnoreCase))
+                var accessToken = await GetAccessToken();
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+                // 1. Get workspace ID
+                var workspaceResponse = await client.GetAsync("https://api.powerbi.com/v1.0/myorg/groups");
+                workspaceResponse.EnsureSuccessStatusCode();
+
+                var workspaceJson = JsonConvert.DeserializeObject<dynamic>(
+                    await workspaceResponse.Content.ReadAsStringAsync());
+
+                string workspaceId = null;
+
+                foreach (var ws in workspaceJson.value)
                 {
-                    workspaceId = ws.id;
-                    break;
-                }
-            }
-
-            if (workspaceId == null)
-            {
-                return BadRequest($"Workspace '{workspaceName}' not found or no access.");
-            }
-
-            // 2. Fetch Datasets for the workspace and map by Dataset ID for fast lookup
-            var datasetsDict = new Dictionary<string, string>();
-            var datasetResponse = await client.GetAsync($"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/datasets");
-
-            if (datasetResponse.IsSuccessStatusCode)
-            {
-                var datasetJson = JsonConvert.DeserializeObject<dynamic>(
-                    await datasetResponse.Content.ReadAsStringAsync());
-
-                foreach (var ds in datasetJson.value)
-                {
-                    string dsId = ds.id;
-                    string dsName = ds.name;
-                    if (!string.IsNullOrEmpty(dsId) && !datasetsDict.ContainsKey(dsId))
+                    string wsName = ws.name;
+                    if (string.Equals(wsName?.Trim(), workspaceName.Trim(), StringComparison.OrdinalIgnoreCase))
                     {
-                        datasetsDict[dsId] = dsName;
+                        workspaceId = ws.id;
+                        break;
                     }
                 }
-            }
 
-            // 3. Fetch Reports for the workspace
-            var reportResponse = await client.GetAsync($"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports");
-            reportResponse.EnsureSuccessStatusCode();
-
-            var reportJson = JsonConvert.DeserializeObject<dynamic>(
-                await reportResponse.Content.ReadAsStringAsync());
-
-            var embedConfigs = new List<EmbedConfig>();
-
-            // 4. Iterate reports and build EmbedConfig list
-            foreach (var report in reportJson.value)
-            {
-                string reportId = report.id;
-                string embedUrl = report.embedUrl;
-                string datasetId = report.datasetId;
-
-                // Lookup Dataset Name from our dictionary
-                string datasetName = null;
-                if (!string.IsNullOrEmpty(datasetId))
+                if (workspaceId == null)
                 {
-                    datasetsDict.TryGetValue(datasetId, out datasetName);
+                    return BadRequest($"Workspace '{workspaceName}' not found or no access.");
                 }
 
-                var tokenRequest = new
+                // 2. Fetch Datasets in the workspace once to build a lookup dictionary (DatasetId -> DatasetName)
+                var datasetResponse = await client.GetAsync($"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/datasets");
+                var datasetLookup = new Dictionary<string, string>();
+
+                if (datasetResponse.IsSuccessStatusCode)
                 {
-                    accessLevel = "View"
-                };
+                    var datasetJson = JsonConvert.DeserializeObject<dynamic>(
+                        await datasetResponse.Content.ReadAsStringAsync());
 
-                var content = new StringContent(
-                    JsonConvert.SerializeObject(tokenRequest),
-                    Encoding.UTF8,
-                    "application/json");
+                    foreach (var ds in datasetJson.value)
+                    {
+                        string dsId = ds.id;
+                        string dsName = ds.name;
+                        if (!string.IsNullOrEmpty(dsId) && !datasetLookup.ContainsKey(dsId))
+                        {
+                            datasetLookup.Add(dsId, dsName);
+                        }
+                    }
+                }
 
-                var tokenResponse = await client.PostAsync(
-                    $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports/{reportId}/GenerateToken",
-                    content);
+                // 3. Get Reports in the workspace
+                var reportResponse = await client.GetAsync($"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports");
+                reportResponse.EnsureSuccessStatusCode();
 
-                if (!tokenResponse.IsSuccessStatusCode)
-                    continue;
+                var reportJson = JsonConvert.DeserializeObject<dynamic>(
+                    await reportResponse.Content.ReadAsStringAsync());
 
-                var tokenJson = JsonConvert.DeserializeObject<dynamic>(
-                    await tokenResponse.Content.ReadAsStringAsync());
+                var embedConfigs = new List<EmbedConfig>();
 
-                embedConfigs.Add(new EmbedConfig
+                foreach (var report in reportJson.value)
                 {
-                    ReportId = reportId,
-                    EmbedUrl = embedUrl,
-                    EmbedToken = tokenJson.token,
-                    DatasetId = datasetId,
-                    DatasetName = datasetName
-                });
+                    string reportId = report.id;
+                    string embedUrl = report.embedUrl;
+                    string datasetId = report.datasetId; // Report metadata includes datasetId
+
+                    // Resolve dataset name from our lookup dictionary
+                    string datasetName = null;
+                    if (!string.IsNullOrEmpty(datasetId) && datasetLookup.TryGetValue(datasetId, out var name))
+                    {
+                        datasetName = name;
+                    }
+
+                    // Generate Embed Token for the report
+                    //var tokenRequest = new { accessLevel = "View" };
+                    //var content = new StringContent(
+                    //    JsonConvert.SerializeObject(tokenRequest),
+                    //    Encoding.UTF8,
+                    //    "application/json");
+
+                    //var tokenResponse = await client.PostAsync(
+                    //    $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/reports/{reportId}/GenerateToken",
+                    //    content);
+
+                    //if (!tokenResponse.IsSuccessStatusCode)
+                    //    continue;
+
+                    //var tokenJson = JsonConvert.DeserializeObject<dynamic>(
+                    //    await tokenResponse.Content.ReadAsStringAsync()) ?? "";
+
+                    embedConfigs.Add(new EmbedConfig
+                    {
+                        ReportId = reportId,
+                        EmbedUrl = embedUrl,
+                        //EmbedToken = tokenJson.token,
+                        EmbedToken = "",
+                        DatasetId = datasetId,
+                        DatasetName = datasetName
+                    });
+                }
+
+                return Ok(embedConfigs);
             }
-
-            return Ok(embedConfigs);
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while fetching reports.", details = ex.Message });
+            }
         }
     }
 }
