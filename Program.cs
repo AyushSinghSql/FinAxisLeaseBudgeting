@@ -54,7 +54,6 @@
 using FinAxisLeaseBudgeting.Data;
 using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.Models;
-using FinAxisLeaseBudgeting.Repositories;
 using FinAxisLeaseBudgeting.RepositorieS;
 using FinAxisLeaseBudgeting.Services;
 using Microsoft.EntityFrameworkCore;
@@ -85,14 +84,16 @@ builder.Services.AddScoped<ICommLeaseRepository, CommLeaseRepository>();
 builder.Services.AddScoped<ICommContactRepository, CommContactRepository>();
 builder.Services.AddScoped<ICommCustomerRepository, CommCustomerRepository>();
 builder.Services.AddScoped<ICommLeaseUnitRepository, CommLeaseUnitRepository>();
-
+//Unit Master Interface
 builder.Services.AddScoped<IUnitRepository, UnitMasterRepository>();
+// Lease Master Interface
 builder.Services.AddScoped<ILeaseRepository, LeaseMasterRepository>();
-
+//Property Master Services / Interface
 builder.Services.AddScoped<IPropertyRepository, PropertyMasterRepository>();
 builder.Services.AddScoped<IPropertyService, PropertyMasterService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-
+//Lease Charge Services / Interface
+builder.Services.AddScoped<ILeaseChargeRepository, LeaseChargeRepository>();
+builder.Services.AddScoped<ILeaseChargeService, LeaseChargeService>();
 
 builder.Services.AddOpenApi(options =>
 {

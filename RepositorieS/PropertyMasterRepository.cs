@@ -7,13 +7,16 @@ using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace FinAxisLeaseBudgeting.Repositories
+namespace FinAxisLeaseBudgeting.RepositorieS
 {
     public class PropertyMasterRepository : IPropertyRepository
     {
         private readonly FinAxisDbContext _context;
 
-        public PropertyMasterRepository(FinAxisDbContext context) => _context = context;
+        public PropertyMasterRepository(FinAxisDbContext context)
+        {
+            _context = context;
+        }
 
         public async Task<PagedResponse<PropertyMaster>> GetPropertiesAsync(string? searchTerm = null, int pageNumber = 0, int pageSize = 10)
         {
@@ -65,7 +68,7 @@ namespace FinAxisLeaseBudgeting.Repositories
             };
         }
 
-        public async Task<PagedResponse<PropertyDropdownDto>> GetPropertyDropdownAsync(string? searchTerm = null, int pageNumber = 0, int pageSize = 10)
+        public async Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownAsync(string? searchTerm = null)
         {
             IQueryable<PropertyMaster> query = _context.PropertyMasters.AsNoTracking();
 
@@ -78,42 +81,15 @@ namespace FinAxisLeaseBudgeting.Repositories
                 );
             }
 
-            int totalRecords = await query.CountAsync();
-            List<PropertyDropdownDto> data;
-            int totalPages = 1;
-
-            var projectedQuery = query
+            return await query
                 .OrderBy(p => p.PropertyCode)
                 .Select(p => new PropertyDropdownDto
                 {
                     PropertyId = p.PropertyId,
                     PropertyCode = p.PropertyCode,
                     PropertyName = p.PropertyName
-                });
-
-            if (pageNumber > 0 && pageSize > 0)
-            {
-                totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
-                data = await projectedQuery
-                    .Skip((pageNumber - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
-            }
-            else
-            {
-                pageNumber = 0;
-                pageSize = totalRecords;
-                data = await projectedQuery.ToListAsync();
-            }
-
-            return new PagedResponse<PropertyDropdownDto>
-            {
-                Data = data,
-                TotalRecords = totalRecords,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                TotalPages = totalPages
-            };
+                })
+                .ToListAsync();
         }
     }
 }

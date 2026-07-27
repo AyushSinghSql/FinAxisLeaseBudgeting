@@ -20,8 +20,8 @@ namespace FinAxisLeaseBudgeting.Data
         public DbSet<CommLease> CommLeases { get; set; } = null!;
         public DbSet<UnitMaster> UnitMasters { get; set; }
         public DbSet<LeaseMaster> LeaseMasters { get; set; }
-
         public DbSet<PropertyMaster> PropertyMasters { get; set; }
+        public DbSet<LeaseCharge> LeaseCharges { get; set; }
 
         public DbSet<EntityMaster> EntityMasters { get; set; }
         public DbSet<User> Users { get; set; }

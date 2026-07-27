@@ -17,20 +17,17 @@ namespace FinAxisLeaseBudgeting.Controllers
         }
 
         /// <summary>
-        /// GET API for dropdown searching (Returns lightweight Property ID, Code, Name)
+        /// GET API for dropdown searching (No pagination - returns array of PropertyId, PropertyCode, PropertyName)
         /// </summary>
         [HttpGet("dropdown")]
-        public async Task<IActionResult> GetPropertyDropdown(
-            [FromQuery] string? searchTerm = null,
-            [FromQuery] int pageNumber = 0,
-            [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetPropertyDropdown([FromQuery] string? searchTerm = null)
         {
-            var result = await _propertyService.GetPropertyDropdownAsync(searchTerm, pageNumber, pageSize);
+            var result = await _propertyService.GetPropertyDropdownAsync(searchTerm);
             return Ok(result);
         }
 
         /// <summary>
-        /// GET API for retrieving full property records
+        /// GET API for retrieving full property records with pagination
         /// </summary>
         [HttpGet("properties")]
         public async Task<IActionResult> GetProperties(
