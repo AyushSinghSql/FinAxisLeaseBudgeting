@@ -58,6 +58,7 @@ using FinAxisLeaseBudgeting.RepositorieS;
 using FinAxisLeaseBudgeting.Services;
 using Microsoft.EntityFrameworkCore;
 using PlanningAPI.Repositories;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,7 +79,11 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler =
+        System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+}); ;
 
 builder.Services.AddScoped<ICommLeaseRepository, CommLeaseRepository>();
 builder.Services.AddScoped<ICommContactRepository, CommContactRepository>();
@@ -94,6 +99,7 @@ builder.Services.AddScoped<IPropertyService, PropertyMasterService>();
 //Lease Charge Services / Interface
 builder.Services.AddScoped<ILeaseChargeRepository, LeaseChargeRepository>();
 builder.Services.AddScoped<ILeaseChargeService, LeaseChargeService>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
 builder.Services.AddOpenApi(options =>
 {

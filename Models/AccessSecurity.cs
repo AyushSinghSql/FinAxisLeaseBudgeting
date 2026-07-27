@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Text.Json;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace PlanningAPI.Models
 {
@@ -29,7 +31,7 @@ namespace PlanningAPI.Models
         [Column("role_name")]
         [StringLength(50)]
         public string RoleName { get; set; } = null!;
-
+        [JsonIgnore]
         public ICollection<User> Users { get; set; } = new List<User>();
 
         public ICollection<RoleScreenPermission> ScreenPermissions { get; set; } = new List<RoleScreenPermission>();
