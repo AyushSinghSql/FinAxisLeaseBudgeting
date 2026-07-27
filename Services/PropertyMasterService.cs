@@ -1,22 +1,21 @@
-﻿using System.Threading.Tasks;
-using FinAxisLeaseBudgeting.Interfaces;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using FinAxisLeaseBudgeting.Repositories;
 using FinAxisLeaseBudgeting.Models;
 
 namespace FinAxisLeaseBudgeting.Services
 {
-    // Interface definition
     public interface IPropertyService
     {
         Task<PagedResponse<PropertyMaster>> GetPropertiesAsync(string? searchTerm, int pageNumber, int pageSize);
-        Task<PagedResponse<PropertyDropdownDto>> GetPropertyDropdownAsync(string? searchTerm, int pageNumber, int pageSize);
+        Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownAsync(string? searchTerm);
     }
 
-    // Concrete class implementation
-    public class PropertyMasterService : IPropertyService
+    public class PropertyService : IPropertyService
     {
         private readonly IPropertyRepository _propertyRepository;
 
-        public PropertyMasterService(IPropertyRepository propertyRepository)
+        public PropertyService(IPropertyRepository propertyRepository)
         {
             _propertyRepository = propertyRepository;
         }
@@ -26,9 +25,9 @@ namespace FinAxisLeaseBudgeting.Services
             return await _propertyRepository.GetPropertiesAsync(searchTerm, pageNumber, pageSize);
         }
 
-        public async Task<PagedResponse<PropertyDropdownDto>> GetPropertyDropdownAsync(string? searchTerm, int pageNumber, int pageSize)
+        public async Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownAsync(string? searchTerm)
         {
-            return await _propertyRepository.GetPropertyDropdownAsync(searchTerm, pageNumber, pageSize);
+            return await _propertyRepository.GetPropertyDropdownAsync(searchTerm);
         }
     }
 }
