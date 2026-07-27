@@ -24,5 +24,13 @@ namespace FinAxisLeaseBudgeting.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("Search")]
+        public async Task<IActionResult> Search([FromBody] LeaseBudgetSearchRequest request)
+        {
+            var result = await _service.SearchAsync(request);
+
+            return Ok(result);
+        }
     }
 }

@@ -196,4 +196,22 @@ namespace FinAxisLeaseBudgeting.Models
         public decimal ProrationFactor { get; set; }
     }
 
+    public class LeaseBudgetSearchRequest
+    {
+        public int BudgetYear { get; set; }
+
+        public int? BudgetVersion { get; set; }
+
+        public string? BudgetType { get; set; }
+
+        public List<PropertyUnitSearch> Properties { get; set; } = new();
+    }
+
+    public class PropertyUnitSearch
+    {
+        public string PropertyId { get; set; }
+
+        public string UnitIds { get; set; }
+    }
+
 }

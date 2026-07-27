@@ -6,5 +6,7 @@ namespace FinAxisLeaseBudgeting.Interfaces
     {
         Task<LeaseBudgetResponse> GenerateRevenueBudgetAsync(
             GenerateLeaseBudgetRequest request);
+
+        Task<List<PlLeaseBudget>> SearchAsync(LeaseBudgetSearchRequest request);
     }
 }

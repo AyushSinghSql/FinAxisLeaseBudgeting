@@ -15,6 +15,40 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             _context = context;
         }
 
+        public async Task<List<PlLeaseBudget>> SearchAsync(LeaseBudgetSearchRequest request)
+        {
+            var query = _context.PlLeaseBudgets
+                .Include(x => x.Details)
+                .AsQueryable();
+
+            query = query.Where(x => x.BudgetYear == request.BudgetYear);
+
+            if (request.BudgetVersion.HasValue)
+                query = query.Where(x => x.BudgetVersion == request.BudgetVersion.Value);
+
+            if (!string.IsNullOrWhiteSpace(request.BudgetType))
+                query = query.Where(x => x.BudgetType == request.BudgetType);
+
+            var budgets = await query.ToListAsync();
+
+            var result = budgets.Where(x =>
+                request.Properties.Any(p =>
+                    p.PropertyId == x.PropertyId &&
+                    p.UnitIds == x.UnitId))
+                .ToList();
+
+            return result;
+
+            //if (request.Properties.Any())
+            //{
+            //    query = query.Where(x =>
+            //        request.Properties.Any(p =>
+            //            p.PropertyId == x.PropertyId &&  p.UnitIds == x.UnitId));
+            //}
+
+           //return await query.ToListAsync();
+        }
+
         public async Task<LeaseBudgetResponse> GenerateRevenueBudgetAsync(
             GenerateLeaseBudgetRequest request)
         {
@@ -233,5 +267,10 @@ namespace FinAxisLeaseBudgeting.RepositorieS
         {
             return ((endDate.Year - startDate.Year) * 12 + endDate.Month - startDate.Month) + 1;
         }
+
+        //Task<List<LeaseBudgetResponse>> ILeaseBudgetRepository.SearchAsync(LeaseBudgetSearchRequest request)
+        //{
+           
+        //}
     }
 }
