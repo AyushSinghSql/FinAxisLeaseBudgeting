@@ -104,6 +104,7 @@ builder.Services.AddScoped<ILeaseChargeService, LeaseChargeService>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IReportGroupRepository, ReportGroupRepository>();
 
 //Exception Middleware
 builder.Services.AddControllers()
