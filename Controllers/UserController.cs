@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -144,6 +145,7 @@ namespace PlanningAPI.Controllers
         //    });
         //}
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
 
@@ -182,6 +184,7 @@ namespace PlanningAPI.Controllers
 
         }
 
+        [AllowAnonymous]
         [HttpPost("loginV1")]
         public async Task<IActionResult> LoginV1([FromBody] LoginDto dto)
         {
