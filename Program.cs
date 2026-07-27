@@ -166,8 +166,10 @@ using FinAxisLeaseBudgeting.Middleware;
 using FinAxisLeaseBudgeting.Models;
 using FinAxisLeaseBudgeting.RepositorieS;
 using FinAxisLeaseBudgeting.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using PlanningAPI.Repositories;
 using Serilog;
@@ -184,6 +186,17 @@ try
     Log.Information("Starting FinAxis Lease Budgeting Web Application...");
 
     var builder = WebApplication.CreateBuilder(args);
+
+    builder.Services.AddControllers(options =>
+    {
+        // 1. Create a policy that requires authenticated users
+        var policy = new AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .Build();
+
+        // 2. Apply this policy globally to every single controller action
+        options.Filters.Add(new AuthorizeFilter(policy));
+    });
 
     // Attach Serilog as the main logging provider
     builder.Host.UseSerilog();
@@ -225,44 +238,6 @@ try
                         kvp => kvp.Key,
                         kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray()
                     );
-builder.Services.AddControllers().AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.ReferenceHandler =
-        System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-}); ;
-
-builder.Services.AddScoped<ICommLeaseRepository, CommLeaseRepository>();
-builder.Services.AddScoped<ICommContactRepository, CommContactRepository>();
-builder.Services.AddScoped<ICommCustomerRepository, CommCustomerRepository>();
-builder.Services.AddScoped<ICommLeaseUnitRepository, CommLeaseUnitRepository>();
-//Unit Master Interface
-builder.Services.AddScoped<IUnitRepository, UnitMasterRepository>();
-// Lease Master Interface
-builder.Services.AddScoped<ILeaseRepository, LeaseMasterRepository>();
-//Property Master Services / Interface
-builder.Services.AddScoped<IPropertyRepository, PropertyMasterRepository>();
-builder.Services.AddScoped<IPropertyService, PropertyMasterService>();
-//Lease Charge Services / Interface
-builder.Services.AddScoped<ILeaseChargeRepository, LeaseChargeRepository>();
-builder.Services.AddScoped<ILeaseChargeService, LeaseChargeService>();
-builder.Services.AddScoped<IRoleRepository, RoleRepository>();
-
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IReportGroupRepository, ReportGroupRepository>();
-
-//Exception Middleware
-builder.Services.AddControllers()
-    .ConfigureApiBehaviorOptions(options =>
-    {
-        options.InvalidModelStateResponseFactory = context =>
-        {
-            // Extract missing field names and error messages automatically
-            var errors = context.ModelState
-                .Where(e => e.Value?.Errors.Count > 0)
-                .ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
 
                 var errorResponse = new
                 {
@@ -275,7 +250,7 @@ builder.Services.AddControllers()
                 return new BadRequestObjectResult(errorResponse);
             };
         });
-    
+
     builder.Services.AddScoped<ICommLeaseRepository, CommLeaseRepository>();
     builder.Services.AddScoped<ICommContactRepository, CommContactRepository>();
     builder.Services.AddScoped<ICommCustomerRepository, CommCustomerRepository>();
@@ -297,6 +272,8 @@ builder.Services.AddControllers()
 
     builder.Services.AddScoped<IRoleRepository, RoleRepository>();
     builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+    builder.Services.AddScoped<IReportGroupRepository, ReportGroupRepository>();
 
     // OpenAPI Specification Config
     builder.Services.AddOpenApi(options =>

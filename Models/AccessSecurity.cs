@@ -184,4 +184,58 @@ namespace PlanningAPI.Models
         public string RoleName { get; set; } = null!;
     }
 
+
+
+
+[Table("reportgroups")]
+    public class ReportGroup
+    {
+        [Key]
+        [Column("id")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
+
+        [Required]
+        [Column("name")]
+        [StringLength(50)]
+        public string Name { get; set; } = string.Empty;
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public ICollection<ReportGroupReportMapping> Reports { get; set; }
+            = new List<ReportGroupReportMapping>();
+    }
+
+    [Table("reportgroup_report_mapping")]
+    public class ReportGroupReportMapping
+    {
+        [Column("reportgroup_id")]
+        [ForeignKey(nameof(ReportGroup))]
+        public int ReportGroupId { get; set; }
+
+        [Column("report_code")]
+        public string ReportCode { get; set; } = string.Empty;
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public ReportGroup ReportGroup { get; set; } = null!;
+    }
+    public class ReportGroupDto
+    {
+        public int Id { get; set; }
+
+        public string Name { get; set; } = string.Empty;
+
+        public List<string> Reports { get; set; } = new();
+    }
+
+    public class SaveReportGroupDto
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public List<string> Reports { get; set; } = new();
+    }
+
 }

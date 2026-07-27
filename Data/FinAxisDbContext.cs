@@ -34,8 +34,8 @@ namespace FinAxisLeaseBudgeting.Data
         public DbSet<RoleFieldPermission> RoleFieldPermissions => Set<RoleFieldPermission>();
         public DbSet<UserScreenPermission> UserScreenPermissions => Set<UserScreenPermission>();
         public DbSet<UserFieldPermission> UserFieldPermissions => Set<UserFieldPermission>();
-
-
+        public DbSet<ReportGroup> ReportGroups { get; set; }
+        public DbSet<ReportGroupReportMapping> ReportGroupReportMappings { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -114,6 +114,19 @@ namespace FinAxisLeaseBudgeting.Data
                 .HasOne(x => x.User)
                 .WithMany(u => u.FieldOverrides)
                 .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ReportGroupReportMapping>()
+                .HasKey(x => new
+                {
+                    x.ReportGroupId,
+                    x.ReportCode
+                });
+
+            modelBuilder.Entity<ReportGroupReportMapping>()
+                .HasOne(x => x.ReportGroup)
+                .WithMany(x => x.Reports)
+                .HasForeignKey(x => x.ReportGroupId)
                 .OnDelete(DeleteBehavior.Cascade);
 
         }
