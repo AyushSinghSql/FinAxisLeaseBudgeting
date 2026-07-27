@@ -82,6 +82,16 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             response.TotalRevenue =
                 response.MonthlyBudget.Sum(x => x.TotalRevenue);
 
+
+            var budgetId = await SaveLeaseBudgetAsync(
+                response,
+                request?.PropertyId,
+                request.UnitId,
+                leases.First().LeaseId,
+                1,
+                "Initial",
+                "");
+
             return response;
         }
 
@@ -128,6 +138,94 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                 FreeRent = 0,
                 BadDebt = 0
             };
+        }
+
+        public async Task<long> SaveLeaseBudgetAsync(
+    LeaseBudgetResponse response,
+    string propertyId,
+    string unitId,
+    string leaseId,
+    int version,
+    string budgetType,
+    string generatedBy)
+        {
+            using var tran = await _context.Database.BeginTransactionAsync();
+
+            var budget = new PlLeaseBudget
+            {
+                PropertyId = propertyId,
+                UnitId = unitId,
+                LeaseId = leaseId,
+
+                BudgetYear = response.BudgetYear,
+                BudgetVersion = version,
+                BudgetType = budgetType,
+
+                GeneratedBy = generatedBy,
+                GeneratedOn = DateTime.UtcNow,
+
+                Status = "Draft",
+
+                TotalBudget = response.TotalRevenue,
+
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.PlLeaseBudgets.Add(budget);
+
+            await _context.SaveChangesAsync();
+
+            foreach (var month in response.MonthlyBudget)
+            {
+                _context.PlLeaseBudgetDetails.Add(new PlLeaseBudgetDetail
+                {
+                    BudgetId = budget.BudgetId,
+                    Budget = budget,
+                    
+                    BudgetMonth = (short)DateTime.ParseExact(
+                        month.Month,
+                        "MMM",
+                        CultureInfo.InvariantCulture).Month,
+
+                    BudgetYear = response.BudgetYear,
+
+                    BaseRent = month.BaseRent,
+
+                    CamRecovery = month.CamRecovery,
+
+                    TaxRecovery = month.TaxRecovery,
+
+                    InsuranceRecovery = month.InsuranceRecovery,
+
+                    ParkingIncome = month.ParkingRevenue,
+
+                    StorageIncome = month.StorageRevenue,
+
+                    PercentageRent = month.PercentageRent,
+
+                    FreeRent = month.FreeRent,
+
+                    BadDebt = month.BadDebt,
+
+                    TotalRevenue = month.TotalRevenue,
+
+                    MiscIncome = 0,
+                    RentAdjustment = 0,
+                    RentAbatement = 0,
+                    VacancyLoss = 0,
+                    OccupiedDays = 0,
+                    DaysInMonth = DateTime.DaysInMonth(response.BudgetYear,
+                        DateTime.ParseExact(month.Month, "MMM", CultureInfo.InvariantCulture).Month),
+
+                    ProrationFactor = 1
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            await tran.CommitAsync();
+
+            return budget.BudgetId;
         }
 
 

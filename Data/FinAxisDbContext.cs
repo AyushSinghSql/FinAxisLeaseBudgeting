@@ -37,7 +37,9 @@ namespace FinAxisLeaseBudgeting.Data
         public DbSet<ReportGroup> ReportGroups { get; set; }
         public DbSet<ReportGroupReportMapping> ReportGroupReportMappings { get; set; }
 
+        public DbSet<PlLeaseBudget> PlLeaseBudgets { get; set; }
 
+        public DbSet<PlLeaseBudgetDetail> PlLeaseBudgetDetails { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -127,6 +129,13 @@ namespace FinAxisLeaseBudgeting.Data
                 .HasOne(x => x.ReportGroup)
                 .WithMany(x => x.Reports)
                 .HasForeignKey(x => x.ReportGroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+            modelBuilder.Entity<PlLeaseBudget>()
+                .HasMany(x => x.Details)
+                .WithOne(x => x.Budget)
+                .HasForeignKey(x => x.BudgetId)
                 .OnDelete(DeleteBehavior.Cascade);
 
         }
