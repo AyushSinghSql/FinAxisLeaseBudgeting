@@ -9,6 +9,7 @@ namespace PlanningAPI.DTO
         public string FullName { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string Role { get; set; } = null!;
+        public int RoleId { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
     }
@@ -42,6 +43,7 @@ namespace PlanningAPI.DTO
                 FullName = user.FullName,
                 Email = user.Email,
                 Role = user.UserRole?.RoleName,
+                RoleId = user.RoleId,
                 IsActive = user.IsActive,
                 CreatedAt = user.CreatedAt
             };
