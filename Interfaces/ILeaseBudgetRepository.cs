@@ -9,6 +9,8 @@ namespace FinAxisLeaseBudgeting.Interfaces
 
         Task<List<PlLeaseBudget>> SearchAsync(LeaseBudgetSearchRequest request);
 
+        Task BulkUpdateRevenueAsync(BulkUpdateLeaseRevenueRequest request);
+
          //RevenueCalculationResult Calculate(
          //       LeaseMaster lease,
          //       //PlLeaseRentSchedule rentSchedule,

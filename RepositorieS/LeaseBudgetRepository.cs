@@ -459,6 +459,87 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             return result;
         }
 
+
+        public async Task BulkUpdateRevenueAsync(
+BulkUpdateLeaseRevenueRequest request)
+        {
+            using var transaction =
+                await _context.Database.BeginTransactionAsync();
+
+            var detailIds = request.Items
+                .Select(x => x.DetailId)
+                .ToList();
+
+            var details = await _context.PlLeaseBudgetDetails
+                .Where(x => detailIds.Contains(x.DetailId))
+                .ToDictionaryAsync(x => x.DetailId);
+
+            foreach (var item in request.Items)
+            {
+                if (!details.TryGetValue(item.DetailId, out var detail))
+                    continue;
+
+                if (item.BaseRent.HasValue)
+                    detail.BaseRent = item.BaseRent.Value;
+
+                if (item.CamRecovery.HasValue)
+                    detail.CamRecovery = item.CamRecovery.Value;
+
+                if (item.TaxRecovery.HasValue)
+                    detail.TaxRecovery = item.TaxRecovery.Value;
+
+                if (item.InsuranceRecovery.HasValue)
+                    detail.InsuranceRecovery = item.InsuranceRecovery.Value;
+
+                if (item.ParkingIncome.HasValue)
+                    detail.ParkingIncome = item.ParkingIncome.Value;
+
+                if (item.StorageIncome.HasValue)
+                    detail.StorageIncome = item.StorageIncome.Value;
+
+                if (item.PercentageRent.HasValue)
+                    detail.PercentageRent = item.PercentageRent.Value;
+
+                if (item.MiscIncome.HasValue)
+                    detail.MiscIncome = item.MiscIncome.Value;
+
+                if (item.RentAdjustment.HasValue)
+                    detail.RentAdjustment = item.RentAdjustment.Value;
+
+                if (item.FreeRent.HasValue)
+                    detail.FreeRent = item.FreeRent.Value;
+
+                if (item.RentAbatement.HasValue)
+                    detail.RentAbatement = item.RentAbatement.Value;
+
+                if (item.VacancyLoss.HasValue)
+                    detail.VacancyLoss = item.VacancyLoss.Value;
+
+                if (item.BadDebt.HasValue)
+                    detail.BadDebt = item.BadDebt.Value;
+
+                detail.TotalRevenue =
+                    detail.BaseRent +
+                    detail.CamRecovery +
+                    detail.TaxRecovery +
+                    detail.InsuranceRecovery +
+                    detail.ParkingIncome +
+                    detail.StorageIncome +
+                    detail.PercentageRent +
+                    detail.MiscIncome +
+                    detail.RentAdjustment -
+                    detail.FreeRent -
+                    detail.RentAbatement -
+                    detail.VacancyLoss -
+                    detail.BadDebt;
+            }
+
+            await _context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+        }
+
+
         public async Task<long> SaveLeaseBudgetAsync(
     LeaseBudgetResponse response,
     string propertyId,
@@ -801,4 +882,6 @@ namespace FinAxisLeaseBudgeting.RepositorieS
         //    return result;
         //}
     }
+
+
 }

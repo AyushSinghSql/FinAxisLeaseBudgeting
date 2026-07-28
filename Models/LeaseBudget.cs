@@ -214,4 +214,40 @@ namespace FinAxisLeaseBudgeting.Models
         public string UnitIds { get; set; }
     }
 
+    public class BulkUpdateLeaseRevenueRequest
+    {
+        public List<LeaseRevenueUpdateItem> Items { get; set; } = new();
+    }
+
+    public class LeaseRevenueUpdateItem
+    {
+        public long DetailId { get; set; }
+
+        public decimal? BaseRent { get; set; }
+
+        public decimal? CamRecovery { get; set; }
+
+        public decimal? TaxRecovery { get; set; }
+
+        public decimal? InsuranceRecovery { get; set; }
+
+        public decimal? ParkingIncome { get; set; }
+
+        public decimal? StorageIncome { get; set; }
+
+        public decimal? PercentageRent { get; set; }
+
+        public decimal? MiscIncome { get; set; }
+
+        public decimal? RentAdjustment { get; set; }
+
+        public decimal? FreeRent { get; set; }
+
+        public decimal? RentAbatement { get; set; }
+
+        public decimal? VacancyLoss { get; set; }
+
+        public decimal? BadDebt { get; set; }
+    }
+
 }

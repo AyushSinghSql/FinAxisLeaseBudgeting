@@ -32,5 +32,18 @@ namespace FinAxisLeaseBudgeting.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("BulkUpdateRevenue")]
+        public async Task<IActionResult> BulkUpdateRevenue(
+    BulkUpdateLeaseRevenueRequest request)
+        {
+            await _service.BulkUpdateRevenueAsync(request);
+
+            return Ok(new
+            {
+                Success = true,
+                Message = "Revenue updated successfully."
+            });
+        }
     }
 }
