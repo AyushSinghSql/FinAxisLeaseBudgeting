@@ -177,8 +177,10 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
                 return new PropertyBudgetDetailDto
                 {
-                    Property = p.PropertyCode,
-                    ModelProperty = p.PropertyId,
+                    Property = p.PropertyId,
+                    ModelProperty = p.PropertyCode,
+                    //Property = p.PropertyCode,
+                    //ModelProperty = p.PropertyId,
                     PropName = p.PropertyName,
                     MarketType = !string.IsNullOrWhiteSpace(p.PropertyType) ? p.PropertyType : "Commercial",
                     AddressLine1 = p.Address ?? "",
