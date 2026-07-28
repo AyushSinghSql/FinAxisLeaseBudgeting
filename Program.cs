@@ -142,6 +142,7 @@ try
 
     builder.Services.AddScoped<IReportGroupRepository, ReportGroupRepository>();
     builder.Services.AddScoped<ILeaseBudgetRepository, LeaseBudgetRepository>();
+    builder.Services.AddScoped<IBudgetAssumptionRepository, BudgetAssumptionRepository>();
 
     // OpenAPI Specification Config
     builder.Services.AddOpenApi(options =>

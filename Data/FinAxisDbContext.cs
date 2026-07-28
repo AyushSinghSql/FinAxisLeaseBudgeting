@@ -40,9 +40,21 @@ namespace FinAxisLeaseBudgeting.Data
         public DbSet<PlLeaseBudget> PlLeaseBudgets { get; set; }
 
         public DbSet<PlLeaseBudgetDetail> PlLeaseBudgetDetails { get; set; }
+        public DbSet<PlBudgetAssumption> PlBudgetAssumptions { get; set; }
+
+        public DbSet<PlBudgetAssumptionDetail> PlBudgetAssumptionDetails { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+
+            modelBuilder.Entity<PlBudgetAssumption>()
+               .HasMany(x => x.AssumptionDetails)
+               .WithOne(x => x.BudgetAssumption)
+               .HasForeignKey(x => x.AssumptionId)
+               .OnDelete(DeleteBehavior.Cascade);
 
             // Configure strict financial precision for numeric columns (18,2)
             modelBuilder.Entity<CommChargeSchedule>(entity =>
