@@ -153,6 +153,8 @@
     public class RentableItemDto
     {
         public int Id { get; set; }
+        public string UnitId { get; set; }
+        public string UnitCode { get; set; }
         public string TypeCode { get; set; } = string.Empty;
         public string Desc { get; set; } = string.Empty;
         public string MarketRent { get; set; } = string.Empty;

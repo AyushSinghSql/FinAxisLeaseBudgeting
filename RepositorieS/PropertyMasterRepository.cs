@@ -143,6 +143,8 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                 var rentableItemsList = propertyUnits.Select((u, index) => new RentableItemDto
                 {
                     Id = index + 1,
+                    UnitId = u.UnitId,
+                    UnitCode = u.UnitCode,
                     TypeCode = !string.IsNullOrWhiteSpace(u.UnitType) ? u.UnitType : "PARK",
                     Desc = !string.IsNullOrWhiteSpace(u.Building) ? u.Building : u.UnitCode,
                     MarketRent = u.MarketRent?.ToString("F2") ?? "150.00",
