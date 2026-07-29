@@ -86,4 +86,19 @@ namespace FinAxisLeaseBudgeting.Models
         [Column("updated_by")]
         public string? UpdatedBy { get; set; }
     }
+
+    public class LeaseFilterRequest
+    {
+        public string? EntityId { get; set; }
+
+        public string? PropertyId { get; set; }
+
+        public string? UnitId { get; set; }
+
+        public string? SearchTerm { get; set; }
+
+        public int PageNumber { get; set; } = 1;
+
+        public int PageSize { get; set; } = 10;
+    }
 }
