@@ -26,6 +26,9 @@ namespace FinAxisLeaseBudgeting.Models
 
     public class LeaseBudgetMonth
     {
+        public short? BudgetMonth { get; set; }
+
+        public int? BudgetYear { get; set; }
         public string Month { get; set; }
 
         public decimal BaseRent { get; set; }
@@ -68,6 +71,10 @@ namespace FinAxisLeaseBudgeting.Models
         public int BudgetYear { get; set; }
 
         public string UnitId { get; set; }
+
+        public DateOnly? StartDate { get; set; }
+
+        public DateOnly? EndDate { get; set; }
     }
 
 

@@ -7,6 +7,20 @@ namespace FinAxisLeaseBudgeting.Interfaces
         Task<LeaseBudgetResponse> GenerateRevenueBudgetAsync(
             GenerateLeaseBudgetRequest request);
 
+        Task<LeaseBudgetResponse> GenerateRevenueBudgetAsyncV1(
+            GenerateLeaseBudgetRequest request);
+
+        Task<long> SaveLeaseBudgetAsyncV1(
+LeaseBudgetResponse response,
+string propertyId,
+string unitId,
+string leaseId,
+int version,
+DateOnly? startDate,
+DateOnly? endDate,
+string budgetType,
+string generatedBy);
+
         Task<List<PlLeaseBudget>> SearchAsync(LeaseBudgetSearchRequest request);
 
         Task BulkUpdateRevenueAsync(BulkUpdateLeaseRevenueRequest request);
