@@ -25,6 +25,22 @@ namespace PlanningAPI.Controllers
                 .ToListAsync();
         }
 
+        [HttpGet("Dropdown")]
+        public async Task<ActionResult> GetEntityDropdown()
+        {
+            var result = await _context.EntityMasters
+                .AsNoTracking()
+                .OrderBy(x => x.EntityName)
+                .Select(x => new 
+                {
+                    Id = x.EntityId,
+                    Name = x.EntityName
+                })
+                .ToListAsync();
+
+            return Ok(result);
+        }
+
         // GET: api/EntityMaster/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<EntityMaster>> Get(string id)
