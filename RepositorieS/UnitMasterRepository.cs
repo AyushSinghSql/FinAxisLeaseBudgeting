@@ -67,5 +67,26 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                 TotalPages = totalPages
             };
         }
+
+        public async Task<IEnumerable<UnitsDropdownDto>> GetUnitsDropdownAsync(string? searchTerm)
+        {
+            IQueryable<UnitMaster> query = _context.UnitMasters.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var search = searchTerm.Trim().ToLower();
+                query = query.Where(p => p.PropertyId.ToLower() == search);
+            }
+
+            return await query
+                .OrderBy(p => p.UnitCode)
+                .Select(p => new UnitsDropdownDto
+                {
+                    UnitId = p.UnitId,
+                    UnitCode = p.UnitCode,
+                    UnitName = p.UnitCode // Assuming UnitName is the same as UnitCode
+                })
+                .ToListAsync();
+        }
     }
 }

@@ -72,4 +72,11 @@ namespace FinAxisLeaseBudgeting.Models
         public int PageSize { get; set; }
         public int TotalPages { get; set; }
     }
+
+    public class UnitsDropdownDto
+    {
+        public string UnitId { get; set; } = string.Empty;
+        public string UnitCode { get; set; } = string.Empty;
+        public string UnitName { get; set; } = string.Empty;
+    }
 }

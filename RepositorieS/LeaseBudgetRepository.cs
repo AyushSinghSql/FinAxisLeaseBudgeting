@@ -49,7 +49,7 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             //            p.PropertyId == x.PropertyId &&  p.UnitIds == x.UnitId));
             //}
 
-           //return await query.ToListAsync();
+            //return await query.ToListAsync();
         }
 
         public async Task<LeaseBudgetResponse> GenerateRevenueBudgetAsync_Working(
@@ -284,6 +284,172 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             return response;
         }
 
+
+        public async Task<LeaseBudgetResponse> GenerateRevenueBudgetAsyncV1(
+    GenerateLeaseBudgetRequest request)
+        {
+            var response = new LeaseBudgetResponse
+            {
+                PropertyId = request.PropertyId,
+                UnitId = request.UnitId
+            };
+
+            var budgetStart = request.StartDate?.ToDateTime(TimeOnly.MinValue) ?? DateTime.MinValue;
+            var budgetEnd = request.EndDate?.ToDateTime(TimeOnly.MaxValue) ?? DateTime.MaxValue;
+
+            //==============================================================
+            // Load all leases overlapping the budget period
+            //==============================================================
+
+            var leases = await _context.LeaseMasters
+                .Where(x =>
+                    x.PropertyId == request.PropertyId &&
+                    x.UnitId == request.UnitId &&
+                    x.LeaseStartDate <= budgetEnd &&
+                    x.LeaseEndDate >= budgetStart)
+                .OrderBy(x => x.LeaseStartDate)
+                .ToListAsync();
+
+            //==============================================================
+            // No Lease -> Use Market Rent
+            //==============================================================
+
+            if (!leases.Any())
+            {
+                var unit = await _context.UnitMasters
+                    .FirstOrDefaultAsync(x =>
+                        x.PropertyId == request.PropertyId &&
+                        x.UnitId == request.UnitId);
+
+                if (unit != null)
+                {
+                    leases.Add(new LeaseMaster
+                    {
+                        LeaseId = "MARKET",
+                        PropertyId = request.PropertyId,
+                        UnitId = request.UnitId,
+                        LeaseStartDate = budgetStart,
+                        LeaseEndDate = budgetEnd,
+                        ContractRent = unit.MarketRent ?? 0
+                    });
+                }
+            }
+
+            //==============================================================
+            // Generate Budget Month by Month
+            //==============================================================
+
+            var currentMonth = new DateOnly(
+                request.StartDate?.Year ?? 0,
+                request.StartDate?.Month ?? 0,
+                1);
+
+            var endMonth = new DateOnly(
+                request.EndDate?.Year ?? 0,
+                request.EndDate?.Month ?? 0,
+                1);
+
+            while (currentMonth <= endMonth)
+            {
+                var monthStart = currentMonth.ToDateTime(TimeOnly.MinValue);
+
+                var monthBudget = new LeaseBudgetMonth
+                {
+                    BudgetMonth = (short)currentMonth.Month,
+                    BudgetYear = currentMonth.Year,
+                    Month = monthStart.ToString("MMM yyyy")
+                };
+
+                foreach (var lease in leases)
+                {
+                    // Skip lease if it doesn't overlap this month
+                    if (lease.LeaseStartDate > monthStart.AddMonths(1).AddDays(-1))
+                        continue;
+
+                    if (lease.LeaseEndDate < monthStart)
+                        continue;
+
+                    //==========================================================
+                    // Load Assumptions
+                    //==========================================================
+
+                    var assumptions =
+                        await _budgetAssumptionRepository.GetAsync(
+                            null,
+                            lease.PropertyId,
+                            null,
+                            lease.UnitId,
+                            lease.LeaseId);
+
+                    //==========================================================
+                    // Calculate Revenue
+                    //==========================================================
+
+                    var revenue =
+                        CalculateMonthlyLeaseRevenue(
+                            lease,
+                            assumptions,
+                            monthStart);
+
+                    monthBudget.BaseRent += revenue.BaseRent;
+                    monthBudget.CamRecovery += revenue.Cam;
+                    monthBudget.TaxRecovery += revenue.Tax;
+                    monthBudget.InsuranceRecovery += revenue.Insurance;
+                    monthBudget.ParkingRevenue += revenue.Parking;
+                    monthBudget.StorageRevenue += revenue.Storage;
+                    monthBudget.PercentageRent += revenue.PercentageRent;
+                    monthBudget.FreeRent += revenue.FreeRent;
+                    monthBudget.BadDebt += revenue.BadDebt;
+
+                    // Optional additional components
+                    // monthBudget.MiscIncome += revenue.MiscIncome;
+                    // monthBudget.VacancyLoss += revenue.VacancyLoss;
+                }
+
+                monthBudget.TotalRevenue =
+                    monthBudget.BaseRent +
+                    monthBudget.CamRecovery +
+                    monthBudget.TaxRecovery +
+                    monthBudget.InsuranceRecovery +
+                    monthBudget.ParkingRevenue +
+                    monthBudget.StorageRevenue +
+                    monthBudget.PercentageRent
+                    // + monthBudget.MiscIncome
+                    // + monthBudget.RentAdjustment
+                    - monthBudget.FreeRent
+                    // - monthBudget.RentAbatement
+                    // - monthBudget.VacancyLoss
+                    - monthBudget.BadDebt;
+
+                response.MonthlyBudget.Add(monthBudget);
+
+                currentMonth = currentMonth.AddMonths(1);
+            }
+
+            //==============================================================
+            // Total Revenue
+            //==============================================================
+
+            response.TotalRevenue = response.MonthlyBudget.Sum(x => x.TotalRevenue);
+
+            //==============================================================
+            // Save Budget
+            //==============================================================
+
+            await SaveLeaseBudgetAsyncV1(
+                response,
+                request.PropertyId,
+                request.UnitId,
+                leases.First().LeaseId,
+                1,
+                request.StartDate,
+                request.EndDate,
+                "Initial",
+                "");
+
+            return response;
+        }
+
         private LeaseRevenue CalculateMonthlyLeaseRevenue(
     LeaseMaster lease)
         {
@@ -295,7 +461,7 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
             return new LeaseRevenue
             {
-                BaseRent = lease.ContractRent.Value/months,
+                BaseRent = lease.ContractRent.Value / months,
                 Cam = 0,
                 Tax = 0,
                 Insurance = 0,
@@ -581,7 +747,99 @@ BulkUpdateLeaseRevenueRequest request)
                 {
                     BudgetId = budget.BudgetId,
                     Budget = budget,
-                    
+
+                    BudgetMonth = (short)DateTime.ParseExact(
+                        month.Month,
+                        "MMM",
+                        CultureInfo.InvariantCulture).Month,
+
+                    BudgetYear = response.BudgetYear,
+
+                    BaseRent = month.BaseRent,
+
+                    CamRecovery = month.CamRecovery,
+
+                    TaxRecovery = month.TaxRecovery,
+
+                    InsuranceRecovery = month.InsuranceRecovery,
+
+                    ParkingIncome = month.ParkingRevenue,
+
+                    StorageIncome = month.StorageRevenue,
+
+                    PercentageRent = month.PercentageRent,
+
+                    FreeRent = month.FreeRent,
+
+                    BadDebt = month.BadDebt,
+
+                    TotalRevenue = month.TotalRevenue,
+
+                    MiscIncome = 0,
+                    RentAdjustment = 0,
+                    RentAbatement = 0,
+                    VacancyLoss = 0,
+                    OccupiedDays = 0,
+                    DaysInMonth = DateTime.DaysInMonth(response.BudgetYear,
+                        DateTime.ParseExact(month.Month, "MMM", CultureInfo.InvariantCulture).Month),
+
+                    ProrationFactor = 1
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            await tran.CommitAsync();
+
+            return budget.BudgetId;
+        }
+
+
+
+        public async Task<long> SaveLeaseBudgetAsyncV1(
+    LeaseBudgetResponse response,
+    string propertyId,
+    string unitId,
+    string leaseId,
+    int version,
+    DateOnly? startDate,
+    DateOnly? endDate,
+    string budgetType,
+    string generatedBy)
+        {
+            using var tran = await _context.Database.BeginTransactionAsync();
+
+            var budget = new PlLeaseBudget
+            {
+                PropertyId = propertyId,
+                UnitId = unitId,
+                LeaseId = leaseId,
+
+                BudgetYear = response.BudgetYear,
+                BudgetVersion = version,
+                BudgetType = budgetType,
+
+                GeneratedBy = generatedBy,
+                GeneratedOn = DateTime.UtcNow,
+
+                Status = "Draft",
+
+                TotalBudget = response.TotalRevenue,
+
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.PlLeaseBudgets.Add(budget);
+
+            await _context.SaveChangesAsync();
+
+            foreach (var month in response.MonthlyBudget)
+            {
+                _context.PlLeaseBudgetDetails.Add(new PlLeaseBudgetDetail
+                {
+                    BudgetId = budget.BudgetId,
+                    Budget = budget,
+
                     BudgetMonth = (short)DateTime.ParseExact(
                         month.Month,
                         "MMM",

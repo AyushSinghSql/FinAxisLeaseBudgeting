@@ -75,10 +75,7 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 var search = searchTerm.Trim().ToLower();
-                query = query.Where(p =>
-                    p.PropertyCode.ToLower().Contains(search) ||
-                    p.PropertyName.ToLower().Contains(search)
-                );
+                query = query.Where(p =>p.EntityId.ToLower() == search);
             }
 
             return await query

@@ -1,5 +1,6 @@
 ﻿using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.RepositorieS;
+using FinAxisLeaseBudgeting.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinAxisLeaseBudgeting.Controllers
@@ -25,5 +26,13 @@ namespace FinAxisLeaseBudgeting.Controllers
             var result = await _IUnitRepository.GetUnitsAsync(searchTerm, pageNumber, pageSize);
             return Ok(result);
         }
+
+        [HttpGet("dropdown")]
+        public async Task<IActionResult> GetUnitsDropdown([FromQuery] string? searchTerm = null)
+        {
+            var result = await _IUnitRepository.GetUnitsDropdownAsync(searchTerm);
+            return Ok(result);
+        }
+
     }
 }

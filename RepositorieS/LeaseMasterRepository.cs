@@ -71,5 +71,62 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                 TotalPages = totalPages
             };
         }
+
+
+        public async Task<PagedResponse<LeaseMaster>> SearchLeasesAsync(LeaseFilterRequest request)
+        {
+            IQueryable<LeaseMaster> query = _context.LeaseMasters.AsNoTracking();
+
+            //if (!string.IsNullOrWhiteSpace(request.EntityId))
+            //{
+            //    query = query.Where(x => x.EntityId == request.EntityId);
+            //}
+
+            if (!string.IsNullOrWhiteSpace(request.PropertyId))
+            {
+                query = query.Where(x => x.PropertyId == request.PropertyId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.UnitId))
+            {
+                query = query.Where(x => x.UnitId == request.UnitId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                var search = request.SearchTerm.Trim().ToLower();
+
+                query = query.Where(l =>
+                    l.LeaseId.ToLower().Contains(search) ||
+                    (l.TenantCode != null && l.TenantCode.ToLower().Contains(search)) ||
+                    (l.TenantName != null && l.TenantName.ToLower().Contains(search)) ||
+                    l.PropertyId.ToLower().Contains(search) ||
+                    l.UnitId.ToLower().Contains(search) ||
+                    (l.LeaseStatus != null && l.LeaseStatus.ToLower().Contains(search)) ||
+                    (l.LeaseType != null && l.LeaseType.ToLower().Contains(search)) ||
+                    (l.ChargeCode != null && l.ChargeCode.ToLower().Contains(search)) ||
+                    (l.BillingFrequency != null && l.BillingFrequency.ToLower().Contains(search))
+                );
+            }
+
+            int totalRecords = await query.CountAsync();
+
+            int totalPages = (int)Math.Ceiling(totalRecords / (double)request.PageSize);
+
+            var data = await query
+                .OrderByDescending(x => x.CreatedAt)
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToListAsync();
+
+            return new PagedResponse<LeaseMaster>
+            {
+                Data = data,
+                TotalRecords = totalRecords,
+                PageNumber = request.PageNumber,
+                PageSize = request.PageSize,
+                TotalPages = totalPages
+            };
+        }
     }
 }
