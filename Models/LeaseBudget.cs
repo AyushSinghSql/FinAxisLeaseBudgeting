@@ -284,17 +284,71 @@ namespace FinAxisLeaseBudgeting.Models
         public decimal? BadDebt { get; set; }
     }
 
+    //public class LeaseBudgetDetailDto
+    //{
+    //    public short BudgetMonth { get; set; }
+
+    //    public int BudgetYear { get; set; }
+
+    //    public string ChargeCode { get; set; } = string.Empty;
+
+    //    public string AccountId { get; set; } = string.Empty;
+
+    //    public decimal Amount { get; set; }
+    //}
+
     public class LeaseBudgetDetailDto
     {
-        public short BudgetMonth { get; set; }
-
+        public long DetailId { get; set; }
+        public int BudgetMonth { get; set; }
         public int BudgetYear { get; set; }
-
-        public string ChargeCode { get; set; } = string.Empty;
-
-        public string AccountId { get; set; } = string.Empty;
-
-        public decimal Amount { get; set; }
+        public decimal BaseRent { get; set; }
+        public decimal CamRecovery { get; set; }
+        public decimal TaxRecovery { get; set; }
+        public decimal InsuranceRecovery { get; set; }
+        public decimal ParkingIncome { get; set; }
+        public decimal StorageIncome { get; set; }
+        public decimal PercentageRent { get; set; }
+        public decimal MiscIncome { get; set; }
+        public decimal RentAdjustment { get; set; }
+        public decimal FreeRent { get; set; }
+        public decimal RentAbatement { get; set; }
+        public decimal VacancyLoss { get; set; }
+        public decimal BadDebt { get; set; }
+        public decimal TotalRevenue { get; set; }
+        public int OccupiedDays { get; set; }
+        public int DaysInMonth { get; set; }
+        public decimal ProrationFactor { get; set; }
     }
 
+    public class BudgetChargeGroup
+    {
+        public string ChargeCode { get; set; }
+        public string AccountId { get; set; }
+        public List<PlLeaseBudgetDetail> Details { get; set; }
+    }
+
+    public class LeaseBudgetDto
+    {
+        public long BudgetId { get; set; }
+        public string PropertyId { get; set; }
+        public string UnitId { get; set; }
+        public string LeaseId { get; set; }
+        public int Version { get; set; }
+        public string BudgetType { get; set; }
+        public DateOnly BudgetStart { get; set; }
+        public DateOnly BudgetEnd { get; set; }
+        public string Status { get; set; }
+
+        public List<LeaseBudgetChargeGroupDto> Groups { get; set; } = new();
+    }
+
+    public class LeaseBudgetChargeGroupDto
+    {
+        public string ChargeCode { get; set; }
+        public string AccountId { get; set; }
+        public List<LeaseBudgetDetailDto> Details { get; set; } = new();
+    }
+
+    
 }

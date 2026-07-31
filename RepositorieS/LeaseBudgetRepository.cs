@@ -978,6 +978,64 @@ BulkUpdateLeaseRevenueRequest request)
             return ((endDate.Year - startDate.Year) * 12 + endDate.Month - startDate.Month) + 1;
         }
 
+
+        public async Task<LeaseBudgetDto?> GetBudgetByIdAsync(long budgetId)
+        {
+            var budget = await _context.PlLeaseBudgets
+                .Include(x => x.Details)
+                .FirstOrDefaultAsync(x => x.BudgetId == budgetId);
+
+            if (budget == null)
+                return null;
+
+            return new LeaseBudgetDto
+            {
+                BudgetId = budget.BudgetId,
+                PropertyId = budget.PropertyId,
+                UnitId = budget.UnitId,
+                LeaseId = budget.LeaseId,
+                Version = budget.BudgetVersion,
+                BudgetType = budget.BudgetType,
+                BudgetStart = budget.StartDate,
+                BudgetEnd = budget.EndDate,
+                Status = budget.Status,
+                Groups = budget.Details
+                    .GroupBy(x => new { x.ChargeCode, x.AccountId })
+                    .Select(g => new LeaseBudgetChargeGroupDto
+                    {
+                        ChargeCode = g.Key.ChargeCode,
+                        AccountId = g.Key.AccountId,
+                        Details = g.OrderBy(x => x.BudgetYear)
+                                   .ThenBy(x => x.BudgetMonth)
+                                   .Select(d => new LeaseBudgetDetailDto
+                                   {
+                                       DetailId = d.DetailId,
+                                       BudgetMonth = d.BudgetMonth,
+                                       BudgetYear = d.BudgetYear,
+                                       BaseRent = d.BaseRent,
+                                       CamRecovery = d.CamRecovery,
+                                       TaxRecovery = d.TaxRecovery,
+                                       InsuranceRecovery = d.InsuranceRecovery,
+                                       ParkingIncome = d.ParkingIncome,
+                                       StorageIncome = d.StorageIncome,
+                                       PercentageRent = d.PercentageRent,
+                                       MiscIncome = d.MiscIncome,
+                                       RentAdjustment = d.RentAdjustment,
+                                       FreeRent = d.FreeRent,
+                                       RentAbatement = d.RentAbatement,
+                                       VacancyLoss = d.VacancyLoss,
+                                       BadDebt = d.BadDebt,
+                                       TotalRevenue = d.TotalRevenue,
+                                       OccupiedDays = d.OccupiedDays,
+                                       DaysInMonth = d.DaysInMonth,
+                                       ProrationFactor = d.ProrationFactor
+                                   })
+                                   .ToList()
+                    })
+                    .ToList()
+            };
+        }
+
         //public RevenueCalculationResult Calculate(
         //        LeaseMaster lease,
         //        //PlLeaseRentSchedule rentSchedule,
