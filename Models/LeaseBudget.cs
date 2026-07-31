@@ -30,6 +30,8 @@ namespace FinAxisLeaseBudgeting.Models
 
         public int? BudgetYear { get; set; }
         public string Month { get; set; }
+        public string AccountId { get; set; }
+        public string ChargeCode { get; set; }
 
         public decimal BaseRent { get; set; }
 
@@ -50,6 +52,8 @@ namespace FinAxisLeaseBudgeting.Models
         public decimal BadDebt { get; set; }
 
         public decimal TotalRevenue { get; set; }
+
+
     }
 
     public class LeaseBudgetResponse
@@ -127,6 +131,21 @@ namespace FinAxisLeaseBudgeting.Models
         [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; }
 
+        [Column("budget_start_date")]
+        public DateOnly StartDate { get; set; }
+
+        [Column("budget_end_date")]
+        public DateOnly EndDate { get; set; }
+
+        [Column("assumption_id")]
+        public long? AssumptionId { get; set; }
+        [Column("is_manual")]
+        public bool IsManual { get; set; }
+
+        [Column("revenue_source")]
+        [StringLength(30)]
+        public string? RevenueSource { get; set; }
+
         public ICollection<PlLeaseBudgetDetail> Details { get; set; }
             = new List<PlLeaseBudgetDetail>();
     }
@@ -201,6 +220,14 @@ namespace FinAxisLeaseBudgeting.Models
 
         [Column("proration_factor")]
         public decimal ProrationFactor { get; set; }
+
+        [Column("charge_code")]
+        [StringLength(50)]
+        public string? ChargeCode { get; set; }
+
+        [Column("account_id")]
+        [StringLength(50)]
+        public string? AccountId { get; set; }
     }
 
     public class LeaseBudgetSearchRequest
@@ -255,6 +282,19 @@ namespace FinAxisLeaseBudgeting.Models
         public decimal? VacancyLoss { get; set; }
 
         public decimal? BadDebt { get; set; }
+    }
+
+    public class LeaseBudgetDetailDto
+    {
+        public short BudgetMonth { get; set; }
+
+        public int BudgetYear { get; set; }
+
+        public string ChargeCode { get; set; } = string.Empty;
+
+        public string AccountId { get; set; } = string.Empty;
+
+        public decimal Amount { get; set; }
     }
 
 }

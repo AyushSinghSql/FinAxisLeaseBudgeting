@@ -27,10 +27,10 @@ namespace FinAxisLeaseBudgeting.Models
         public string? LeaseStatus { get; set; }
 
         [Column("lease_start_date")]
-        public DateTime? LeaseStartDate { get; set; }
+        public DateOnly? LeaseStartDate { get; set; }
 
         [Column("lease_end_date")]
-        public DateTime? LeaseEndDate { get; set; }
+        public DateOnly? LeaseEndDate { get; set; }
 
         [Column("move_in_date")]
         public DateTime? MoveInDate { get; set; }

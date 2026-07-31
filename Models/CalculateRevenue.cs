@@ -46,9 +46,9 @@
 
         public decimal Cam { get; set; }
 
-        public decimal Tax { get; set; }
+        public decimal UTIL { get; set; }
 
-        public decimal Insurance { get; set; }
+        public decimal ServiceCharge { get; set; }
 
         public decimal Parking { get; set; }
 
@@ -59,8 +59,13 @@
         public decimal MiscIncome { get; set; }
 
         public decimal FreeRent { get; set; }
-
+        public decimal UtilityRecovery { get; set; }
+        public decimal Penalty { get; set; }
+        public decimal Deposit { get; set; }
+        public decimal Discount { get; set; }
+        public decimal Maintainance { get; set; }
         public decimal BadDebt { get; set; }
+        public decimal Fitout { get; set; }
 
         public decimal VacancyLoss { get; set; }
 
