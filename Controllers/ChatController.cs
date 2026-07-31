@@ -5,6 +5,7 @@ using PlanningAPI.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace PlanningAPI.Controllers
@@ -32,13 +33,13 @@ namespace PlanningAPI.Controllers
         {
             try
             {
-                // MCP Server Endpoint
+                // 1. Get MCP Endpoint URI
                 var endpointUri = _configuration["AI:MCPServiceUri"]
                     ?? throw new InvalidOperationException("MCPServiceUri is not configured in appsettings.");
 
                 var endpoint = new Uri(endpointUri);
 
-                // Initialize MCP Transport & Client
+                // 2. Initialize MCP Transport and Client safely
                 var httpTransport = new HttpClientTransport(new HttpClientTransportOptions
                 {
                     Endpoint = endpoint
@@ -46,29 +47,36 @@ namespace PlanningAPI.Controllers
 
                 await using var mcpClient = await McpClient.CreateAsync(httpTransport);
 
-                // Fetch available tools from MCP server
+                // 3. Fetch tools from the MCP server
                 var mcpTools = await mcpClient.ListToolsAsync();
 
-                // Setup Chat Messages
+                // 4. Manually bridge MCP tools into AIFunction definitions.
+                // This converts dynamic MCP tool signatures into standard AIFunctions,
+                // bypassing GeminiDotnet's internal TextContent/Object source generation exception.
+                var aiFunctions = mcpTools.Select(tool => AIFunctionFactory.Create(
+                    async (JsonElement args) =>
+                    {
+                        var dictionaryArgs = JsonSerializer.Deserialize<Dictionary<string, object>>(args.GetRawText());
+                        var result = await mcpClient.CallToolAsync(tool.Name, dictionaryArgs ?? new());
+                        return result;
+                    },
+                    tool.Name,
+                    tool.Description ?? string.Empty
+                )).Cast<AITool>().ToList();
+
+                // 5. Setup Chat History
                 var messages = new List<ChatMessage>
                 {
                     new ChatMessage(ChatRole.System, AiPrompt.SystemPrompt),
                     new ChatMessage(ChatRole.User, message)
                 };
 
-                // Convert MCP tools into standard AIFunction instances to bypass GeminiDotnet's strict MEAI type mapper crash
-                var aiFunctions = mcpTools.Select(t => AIFunctionFactory.Create(
-                    async (object[] args) => await mcpClient.CallToolAsync(t.Name, args.ToDictionary(a => a?.ToString() ?? "", a => a)),
-                    t.Name,
-                    t.Description ?? string.Empty
-                )).Cast<AIFunction>().ToList();
-
-                // Get the complete full response using standard AIFunction definitions
+                // 6. Request complete non-streaming response with wrapped functions
                 var response = await _chatClient.GetResponseAsync(
                     messages,
                     new ChatOptions
                     {
-                        Tools = [.. aiFunctions]
+                        Tools = aiFunctions
                     }
                 );
 
@@ -76,7 +84,7 @@ namespace PlanningAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing full chat request.");
+                _logger.LogError(ex, "Error processing full chat request with MCP tools.");
                 return $"Error: {ex.Message}";
             }
         }
