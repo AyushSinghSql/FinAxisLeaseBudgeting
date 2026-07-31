@@ -21,12 +21,13 @@ namespace FinAxisLeaseBudgeting.Controllers
         /// </summary>
         [HttpGet("expiring-leases")]
         public async Task<IActionResult> GetExpiringLeases(
-            [FromQuery] string? propertyId = null,
-            [FromQuery] int months = 1,
-            [FromQuery] int pageNumber = 0,
-            [FromQuery] int pageSize = 10)
+    [FromQuery] string? propertyId = null,
+    [FromQuery] int value = 1,          // Represents the quantity (e.g., 2 weeks, 30 days)
+    [FromQuery] string timeUnit = "month", // "day", "week", "month", or "year"
+    [FromQuery] int pageNumber = 0,
+    [FromQuery] int pageSize = 10)
         {
-            var result = await _aiService.GetExpiringLeasesAsync(propertyId, months, pageNumber, pageSize);
+            var result = await _aiService.GetExpiringLeasesAsync(propertyId, value, timeUnit, pageNumber, pageSize);
             return Ok(result);
         }
 

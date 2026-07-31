@@ -19,13 +19,23 @@ namespace FinAxisLeaseBudgeting.Repositories
         }
 
         public async Task<PagedResponse<ExpiringLeaseDto>> GetExpiringLeasesAsync(
-    string? propertyId = null,
-    int months = 1,
-    int pageNumber = 0,
-    int pageSize = 10)
+     string? propertyId = null,
+     int value = 1,
+     string timeUnit = "month",
+     int pageNumber = 0,
+     int pageSize = 10)
         {
             var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
-            var targetDate = today.AddMonths(months).AddDays(1);
+
+            // Calculate targetDate dynamically based on timeUnit
+            var targetDate = timeUnit.ToLowerInvariant() switch
+            {
+                "day" or "days" => today.AddDays(value),
+                "week" or "weeks" => today.AddDays(value * 7),
+                "month" or "months" => today.AddMonths(value),
+                "year" or "years" => today.AddYears(value),
+                _ => today.AddMonths(value) // Default fallback
+            };
 
             IQueryable<LeaseMaster> query = _context.LeaseMasters.AsNoTracking()
                 .Where(l => l.LeaseEndDate.HasValue
@@ -47,7 +57,6 @@ namespace FinAxisLeaseBudgeting.Repositories
                     TenantName = l.TenantName ?? string.Empty,
                     PropertyId = l.PropertyId,
                     UnitId = l.UnitId,
-                    // FIX: Convert DateOnly? to DateTime? using .ToDateTime(TimeOnly.MinValue)
                     LeaseEndDate = l.LeaseEndDate.HasValue
                         ? l.LeaseEndDate.Value.ToDateTime(TimeOnly.MinValue)
                         : (DateTime?)null,

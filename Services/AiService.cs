@@ -7,8 +7,18 @@ namespace FinAxisLeaseBudgeting.Services
 {
     public interface IAiService
     {
-        Task<PagedResponse<ExpiringLeaseDto>> GetExpiringLeasesAsync(string? propertyId = null, int months = 1, int pageNumber = 0, int pageSize = 10);
-        Task<PagedResponse<VacantUnitDto>> GetVacantUnitsAsync(string? propertyId = null, int pageNumber = 0, int pageSize = 10);
+        // Updated to support flexible time units (days, weeks, months, years)
+        Task<PagedResponse<ExpiringLeaseDto>> GetExpiringLeasesAsync(
+            string? propertyId = null,
+            int value = 1,
+            string timeUnit = "month",
+            int pageNumber = 0,
+            int pageSize = 10);
+
+        Task<PagedResponse<VacantUnitDto>> GetVacantUnitsAsync(
+            string? propertyId = null,
+            int pageNumber = 0,
+            int pageSize = 10);
 
         Task<PagedResponse<MarketRentDto>> GetMarketRentUnitsAsync(
             string? propertyId = null,
@@ -22,13 +32,13 @@ namespace FinAxisLeaseBudgeting.Services
             int pageSize = 10);
 
         Task<PagedResponse<BudgetAssumptionDto>> GetBudgetAssumptionsAsync(
-    string? entityId = null,
-    string? propertyId = null,
-    string? buildingId = null,
-    string? unitId = null,
-    string? leaseId = null,
-    int pageNumber = 0,
-    int pageSize = 10);
+            string? entityId = null,
+            string? propertyId = null,
+            string? buildingId = null,
+            string? unitId = null,
+            string? leaseId = null,
+            int pageNumber = 0,
+            int pageSize = 10);
     }
 
     public class AiService : IAiService
@@ -40,9 +50,15 @@ namespace FinAxisLeaseBudgeting.Services
             _aiRepository = aiRepository;
         }
 
-        public async Task<PagedResponse<ExpiringLeaseDto>> GetExpiringLeasesAsync(string? propertyId = null, int months = 1, int pageNumber = 0, int pageSize = 10)
+        // Updated implementation matching the interface signature
+        public async Task<PagedResponse<ExpiringLeaseDto>> GetExpiringLeasesAsync(
+            string? propertyId = null,
+            int value = 1,
+            string timeUnit = "month",
+            int pageNumber = 0,
+            int pageSize = 10)
         {
-            return await _aiRepository.GetExpiringLeasesAsync(propertyId, months, pageNumber, pageSize);
+            return await _aiRepository.GetExpiringLeasesAsync(propertyId, value, timeUnit, pageNumber, pageSize);
         }
 
         public async Task<PagedResponse<VacantUnitDto>> GetVacantUnitsAsync(string? propertyId = null, int pageNumber = 0, int pageSize = 10)
@@ -66,13 +82,13 @@ namespace FinAxisLeaseBudgeting.Services
         }
 
         public async Task<PagedResponse<BudgetAssumptionDto>> GetBudgetAssumptionsAsync(
-    string? entityId = null,
-    string? propertyId = null,
-    string? buildingId = null,
-    string? unitId = null,
-    string? leaseId = null,
-    int pageNumber = 0,
-    int pageSize = 10)
+            string? entityId = null,
+            string? propertyId = null,
+            string? buildingId = null,
+            string? unitId = null,
+            string? leaseId = null,
+            int pageNumber = 0,
+            int pageSize = 10)
         {
             return await _aiRepository.GetBudgetAssumptionsAsync(
                 entityId, propertyId, buildingId, unitId, leaseId, pageNumber, pageSize);

@@ -7,7 +7,8 @@ namespace FinAxisLeaseBudgeting.Interfaces
     {
         Task<PagedResponse<ExpiringLeaseDto>> GetExpiringLeasesAsync(
             string? propertyId = null,
-            int months = 1,
+            int value = 1,
+            string timeUnit = "month",
             int pageNumber = 0,
             int pageSize = 10);
 
