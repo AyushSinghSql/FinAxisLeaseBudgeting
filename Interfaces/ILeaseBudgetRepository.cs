@@ -25,6 +25,8 @@ string generatedBy);
 
         Task BulkUpdateRevenueAsync(BulkUpdateLeaseRevenueRequest request);
 
+        Task<LeaseBudgetDto?> GetBudgetByIdAsync(long budgetId);
+
          //RevenueCalculationResult Calculate(
          //       LeaseMaster lease,
          //       //PlLeaseRentSchedule rentSchedule,

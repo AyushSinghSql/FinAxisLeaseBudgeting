@@ -1,5 +1,6 @@
 ﻿using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.Models;
+using FinAxisLeaseBudgeting.RepositorieS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -53,6 +54,17 @@ namespace FinAxisLeaseBudgeting.Controllers
                 Success = true,
                 Message = "Revenue updated successfully."
             });
+        }
+
+        [HttpGet("{budgetId:long}")]
+        public async Task<IActionResult> GetBudgetById(long budgetId)
+        {
+            var budget = await _service.GetBudgetByIdAsync(budgetId);
+
+            if (budget == null)
+                return NotFound($"Budget with ID {budgetId} not found.");
+
+            return Ok(budget);
         }
     }
 }
