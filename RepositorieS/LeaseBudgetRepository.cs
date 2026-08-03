@@ -20,17 +20,66 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
         public async Task<List<PlLeaseBudget>> SearchAsync(LeaseBudgetSearchRequest request)
         {
+            var budgets = await _context.PlLeaseBudgets
+                .Include(x => x.Details)
+                .ToListAsync();
+
+            var result = budgets
+                .Where(x => request.Properties.Any(p =>
+                    p.PropertyId == x.PropertyId &&
+                    p.UnitIds == x.UnitId))
+                .ToList();
+
+            var keys = request.Properties
+                .Select(p => $"{p.PropertyId}|{p.UnitIds}")
+                .ToHashSet();
+
+            var leases = await _context.LeaseMasters
+                .Where(x => keys.Contains(x.PropertyId + "|" + x.UnitId))
+                .ToDictionaryAsync(x => x.PropertyId + "|" + x.UnitId, x => x.TenantCode);
+
+            foreach (var budget in result)
+            {
+                var detail = budget.Details.FirstOrDefault();
+                budget.TenantId = leases.GetValueOrDefault($"{budget.PropertyId}|{budget.UnitId}");
+                budget.ChargeCode = detail?.ChargeCode;
+                budget.AccountId = detail?.AccountId;
+            }
+
+            // Add units without budgets
+            foreach (var property in request.Properties)
+            {
+                bool exists = result.Any(x =>
+                    x.PropertyId == property.PropertyId &&
+                    x.UnitId == property.UnitIds);
+
+                if (!exists)
+                {
+                    result.Add(new PlLeaseBudget
+                    {
+                        PropertyId = property.PropertyId,
+                        TenantId = leases.ContainsKey(property.UnitIds) ? leases[property.UnitIds] : string.Empty,
+                        UnitId = property.UnitIds,
+                        LeaseId = string.Empty,
+                        BudgetYear = 0,
+                        BudgetVersion = 0,
+                        BudgetType = null,
+                        Status = "Not Created",
+                        TotalBudget = 0,
+                        Details = new List<PlLeaseBudgetDetail>(),
+                        ChargeCode = null,
+                        AccountId = null
+                    });
+                }
+            }
+
+            return result;
+        }
+        public async Task<List<PlLeaseBudget>> SearchAsync_Working(LeaseBudgetSearchRequest request)
+        {
             var query = _context.PlLeaseBudgets
                 .Include(x => x.Details)
                 .AsQueryable();
-
-            //query = query.Where(x => x.BudgetYear == request.BudgetYear);
-
-            //if (request.BudgetVersion.HasValue)
-            //    query = query.Where(x => x.BudgetVersion == request.BudgetVersion.Value);
-
-            //if (!string.IsNullOrWhiteSpace(request.BudgetType))
-            //    query = query.Where(x => x.BudgetType == request.BudgetType);
 
             var budgets = await query.ToListAsync();
 
@@ -49,15 +98,6 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             }
 
             return result;
-
-            //if (request.Properties.Any())
-            //{
-            //    query = query.Where(x =>
-            //        request.Properties.Any(p =>
-            //            p.PropertyId == x.PropertyId &&  p.UnitIds == x.UnitId));
-            //}
-
-            //return await query.ToListAsync();
         }
 
 
@@ -1279,7 +1319,7 @@ BulkUpdateLeaseRevenueRequest request)
                 PropertyId = propertyId,
                 UnitId = unitId,
                 LeaseId = leaseId,
-
+                TenantId = response.TenantId,
                 BudgetYear = response.BudgetYear,
                 BudgetVersion = version,
                 BudgetType = budgetType,

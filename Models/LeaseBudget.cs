@@ -60,6 +60,7 @@ namespace FinAxisLeaseBudgeting.Models
     {
         public string PropertyId { get; set; }
         public string UnitId { get; set; }
+        public string TenantId { get; set; }
 
         public int BudgetYear { get; set; }
 
@@ -112,7 +113,7 @@ namespace FinAxisLeaseBudgeting.Models
         public string? BudgetType { get; set; }
 
         [Column("tenant_id")]
-        public int? TenantId { get; set; }
+        public string? TenantId { get; set; }
 
         [Column("generated_on")]
         public DateTime? GeneratedOn { get; set; }
