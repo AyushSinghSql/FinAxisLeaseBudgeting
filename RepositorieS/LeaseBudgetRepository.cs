@@ -1246,6 +1246,10 @@ BulkUpdateLeaseRevenueRequest request)
         {
             using var tran = await _context.Database.BeginTransactionAsync();
 
+
+            int? lastVersion = await _context.PlLeaseBudgets.Where(p => p.PropertyId == propertyId && p.UnitId == unitId).OrderByDescending(p => p.BudgetVersion).Select(p => (int?)p.BudgetVersion).FirstOrDefaultAsync();
+            version = (lastVersion ?? 0) + 1;
+
             var budget = new PlLeaseBudget
             {
                 PropertyId = propertyId,
