@@ -40,6 +40,14 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                     p.UnitIds == x.UnitId))
                 .ToList();
 
+            foreach (var budget in result)
+            {
+                var detail = budget.Details.FirstOrDefault();
+
+                budget.ChargeCode = detail?.ChargeCode;
+                budget.AccountId = detail?.AccountId;
+            }
+
             return result;
 
             //if (request.Properties.Any())

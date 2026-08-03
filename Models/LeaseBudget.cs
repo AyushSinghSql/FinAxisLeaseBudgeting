@@ -150,6 +150,12 @@ namespace FinAxisLeaseBudgeting.Models
         [StringLength(30)]
         public string? RevenueSource { get; set; }
 
+        [NotMapped]
+        public string? ChargeCode { get; set; }
+
+        [NotMapped]
+        public string? AccountId { get; set; }
+
         public ICollection<PlLeaseBudgetDetail> Details { get; set; }
             = new List<PlLeaseBudgetDetail>();
     }
