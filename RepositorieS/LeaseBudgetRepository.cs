@@ -26,8 +26,8 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
             //query = query.Where(x => x.BudgetYear == request.BudgetYear);
 
-            if (request.BudgetVersion.HasValue)
-                query = query.Where(x => x.BudgetVersion == request.BudgetVersion.Value);
+            //if (request.BudgetVersion.HasValue)
+            //    query = query.Where(x => x.BudgetVersion == request.BudgetVersion.Value);
 
             //if (!string.IsNullOrWhiteSpace(request.BudgetType))
             //    query = query.Where(x => x.BudgetType == request.BudgetType);
