@@ -52,6 +52,22 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             //return await query.ToListAsync();
         }
 
+
+        public async Task<List<PlLeaseBudget>> GetBudgetsAsync(LeaseBudgetSearchRequest request)
+        {
+            var query = _context.PlLeaseBudgets
+                .AsQueryable();
+
+            var budgets = await query.ToListAsync();
+            var result = budgets.Where(x =>
+                request.Properties.Any(p =>
+                    p.PropertyId == x.PropertyId &&
+                    p.UnitIds == x.UnitId))
+                .ToList();
+
+            return result;
+        }
+
         public async Task<LeaseBudgetResponse> GenerateRevenueBudgetAsync_Working(
             GenerateLeaseBudgetRequest request)
         {
@@ -325,8 +341,8 @@ GenerateLeaseBudgetRequest request)
                 .Where(x =>
                     x.PropertyId == request.PropertyId &&
                     x.UnitId == request.UnitId &&
-                    x.LeaseStartDate <= DateOnly.FromDateTime(budgetEnd) &&
-                    x.LeaseEndDate >= DateOnly.FromDateTime(budgetStart))
+                    x.LeaseStartDate <= DateOnly.FromDateTime(LeaseEnd) &&
+                    x.LeaseEndDate >= DateOnly.FromDateTime(LeaseStart))
                 .OrderBy(x => x.LeaseStartDate)
                 .ToListAsync();
 
@@ -466,7 +482,7 @@ GenerateLeaseBudgetRequest request)
             // Total Revenue
             //==============================================================
 
-            response.TotalRevenue = response.MonthlyBudget.Sum(x => x.TotalRevenue);
+            response.TotalRevenue = response.MonthlyBudget.Sum(x => x.BaseRent);
 
             //==============================================================
             // Save Budget
