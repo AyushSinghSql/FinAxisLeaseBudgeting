@@ -42,35 +42,32 @@
 
     public class LeaseRevenueResult
     {
-        public decimal BaseRent { get; set; }
+        public decimal BaseRent { get; set; } = decimal.Zero;
 
-        public decimal Cam { get; set; }
+        public decimal Cam { get; set; } = decimal.Zero;
 
-        public decimal UTIL { get; set; }
+        public decimal UTIL { get; set; } = decimal.Zero;
 
-        public decimal ServiceCharge { get; set; }
+        public decimal ServiceCharge { get; set; } = decimal.Zero;
 
-        public decimal Parking { get; set; }
+        public decimal Parking { get; set; } = decimal.Zero;
 
-        public decimal Storage { get; set; }
+        public decimal Storage { get; set; } = decimal.Zero;
 
-        public decimal PercentageRent { get; set; }
+        public decimal PercentageRent { get; set; } = decimal.Zero;
 
-        public decimal MiscIncome { get; set; }
+        public decimal MiscIncome { get; set; } = decimal.Zero;
 
-        public decimal FreeRent { get; set; }
-        public decimal UtilityRecovery { get; set; }
-        public decimal Penalty { get; set; }
-        public decimal Deposit { get; set; }
-        public decimal Discount { get; set; }
-        public decimal Maintainance { get; set; }
-        public decimal BadDebt { get; set; }
-        public decimal Fitout { get; set; }
-
-        public decimal VacancyLoss { get; set; }
-
-        public decimal Total { get; set; }
-
+        public decimal FreeRent { get; set; } = decimal.Zero;
+        public decimal UtilityRecovery { get; set; } = decimal.Zero;
+        public decimal Penalty { get; set; } = decimal.Zero;
+        public decimal Deposit { get; set; } = decimal.Zero;
+        public decimal Discount { get; set; } = decimal.Zero;
+        public decimal Maintainance { get; set; } = decimal.Zero;
+        public decimal BadDebt { get; set; } = decimal.Zero;
+        public decimal Fitout { get; set; } = decimal.Zero;
+        public decimal VacancyLoss { get; set; } = decimal.Zero;
+        public decimal Revenue { get; set; } = decimal.Zero;
 
         // Optional - useful for saving component level budget
         public List<LeaseRevenueComponent> Components { get; set; }

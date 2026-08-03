@@ -76,9 +76,13 @@ namespace FinAxisLeaseBudgeting.Models
 
         public string UnitId { get; set; }
 
-        public DateOnly? StartDate { get; set; }
+        public DateOnly? LeaseStartDate { get; set; }
 
-        public DateOnly? EndDate { get; set; }
+        public DateOnly? LeaseEndDate { get; set; }
+
+        public DateOnly? BudgetStartDate { get; set; }
+
+        public DateOnly? BudgetEndDate { get; set; }
     }
 
 
