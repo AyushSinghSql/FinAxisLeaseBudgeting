@@ -791,8 +791,8 @@ GenerateLeaseBudgetRequest request)
                 request.UnitId,
                 leases.First().LeaseId,
                 1,
-                request.LeaseStartDate,
-                request.LeaseEndDate,
+                request.BudgetStartDate,
+                request.BudgetEndDate,
                 "Initial",
                 "");
 
