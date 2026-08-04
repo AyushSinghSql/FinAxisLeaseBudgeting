@@ -1,8 +1,10 @@
-﻿using FinAxisLeaseBudgeting.Interfaces;
+﻿using FinAxisLeaseBudgeting.Data;
+using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.Models;
 using FinAxisLeaseBudgeting.RepositorieS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinAxisLeaseBudgeting.Controllers
 {
@@ -11,10 +13,12 @@ namespace FinAxisLeaseBudgeting.Controllers
     public class LeaseBudgetController : ControllerBase
     {
         private readonly ILeaseBudgetRepository _service;
+        private readonly FinAxisDbContext _context;
 
-        public LeaseBudgetController(ILeaseBudgetRepository service)
+        public LeaseBudgetController(ILeaseBudgetRepository service, FinAxisDbContext context)
         {
             _service = service;
+            _context = context;
         }
 
         [HttpPost("GenerateRevenueBudget")]
@@ -85,6 +89,43 @@ namespace FinAxisLeaseBudgeting.Controllers
             });
 
             return Ok(budgets);
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteBudgetAsync([FromBody] List<int> ids)
+        {
+            if (ids == null || !ids.Any())
+            {
+                return BadRequest(new { message = "Please provide at least one budget ID to delete." });
+            }
+
+            var budgets = await _context.PlLeaseBudgets
+                .Include(x => x.Details)
+                .Where(x => ids.Contains((int)x.BudgetId)) 
+                .ToListAsync();
+
+            if (!budgets.Any())
+            {
+                return NotFound(new { message = "No matching lease budgets were found for the provided IDs." });
+            }
+
+            var allDetails = budgets.SelectMany(b => b.Details).ToList();
+
+            if (allDetails.Any())
+            {
+                _context.PlLeaseBudgetDetails.RemoveRange(allDetails);
+            }
+
+            _context.PlLeaseBudgets.RemoveRange(budgets);
+
+            await _context.SaveChangesAsync();
+
+            if (budgets.Count == 1)
+            {
+                return Ok(new { message = "Lease budget and its details deleted successfully.", deletedId = budgets.First().BudgetId });
+            }
+
+            return Ok(new { message = $"{budgets.Count} lease budgets and their details deleted successfully.", deletedIds = budgets.Select(b => b.BudgetId).ToList() });
         }
     }
 }
