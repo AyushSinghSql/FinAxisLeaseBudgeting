@@ -107,6 +107,14 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                 .AsQueryable();
 
             var budgets = await query.ToListAsync();
+
+            // Check if properties filter is null or empty. If so, return all budgets.
+            if (request.Properties[0].PropertyId == null || !request.Properties.Any())
+            {
+                return budgets;
+            }
+
+            // Otherwise, filter by the requested properties and units
             var result = budgets.Where(x =>
                 request.Properties.Any(p =>
                     p.PropertyId == x.PropertyId &&
