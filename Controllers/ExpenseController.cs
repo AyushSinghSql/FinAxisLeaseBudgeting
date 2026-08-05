@@ -118,8 +118,8 @@ namespace FinAxisLeaseBudgeting.Controllers
                     .OrderBy(x => x.ChargeCode)
                     .Select(x => new DropdownDto
                     {
-                        Id = x.ChargeCode,
-                        Name = x.ChargeCode + " - " + x.ChargeDescription
+                        Id = x.GlAccount,
+                        Name = x.GlAccount + " - " + x.ChargeCode
                     })
                     .ToListAsync();
 
