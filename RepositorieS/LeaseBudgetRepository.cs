@@ -189,7 +189,7 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
             }
             response.TotalRevenue =
-                response.MonthlyBudget.Sum(x => x.TotalRevenue);
+                response.MonthlyBudget.Sum(x => x.TotalRevenue ?? 0);
 
 
             var budgetId = await SaveLeaseBudgetAsync(
@@ -338,7 +338,7 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
             response.TotalRevenue =
                 response.MonthlyBudget
-                .Sum(x => x.TotalRevenue);
+                .Sum(x => x.TotalRevenue ?? 0);
 
 
 
@@ -779,7 +779,7 @@ GenerateLeaseBudgetRequest request)
             // Total Revenue
             //==============================================================
 
-            response.TotalRevenue = response.MonthlyBudget.Sum(x => x.TotalRevenue);
+            response.TotalRevenue = response.MonthlyBudget.Sum(x => x.TotalRevenue ?? 0);
 
             //==============================================================
             // Save Budget
@@ -1266,23 +1266,23 @@ BulkUpdateLeaseRevenueRequest request)
 
                     BaseRent = month.BaseRent,
 
-                    CamRecovery = month.CamRecovery,
+                    CamRecovery = month.CamRecovery ?? 0,
 
-                    TaxRecovery = month.TaxRecovery,
+                    TaxRecovery = month.TaxRecovery ?? 0,
 
-                    InsuranceRecovery = month.InsuranceRecovery,
+                    InsuranceRecovery = month.InsuranceRecovery ?? 0,
 
-                    ParkingIncome = month.ParkingRevenue,
+                    ParkingIncome = month.ParkingRevenue ?? 0,
 
-                    StorageIncome = month.StorageRevenue,
+                    StorageIncome = month.StorageRevenue ?? 0,
 
-                    PercentageRent = month.PercentageRent,
+                    PercentageRent = month.PercentageRent ?? 0,
 
-                    FreeRent = month.FreeRent,
+                    FreeRent = month.FreeRent ?? 0,
 
-                    BadDebt = month.BadDebt,
+                    BadDebt = month.BadDebt ?? 0,
 
-                    TotalRevenue = month.TotalRevenue,
+                    TotalRevenue = month.TotalRevenue ?? 0,
 
                     MiscIncome = 0,
                     RentAdjustment = 0,
@@ -1371,23 +1371,23 @@ BulkUpdateLeaseRevenueRequest request)
 
                     BaseRent = month.BaseRent,
 
-                    CamRecovery = month.CamRecovery,
+                    CamRecovery = month.CamRecovery ?? 0,
 
-                    TaxRecovery = month.TaxRecovery,
+                    TaxRecovery = month.TaxRecovery ?? 0,
 
-                    InsuranceRecovery = month.InsuranceRecovery,
+                    InsuranceRecovery = month.InsuranceRecovery ?? 0,
 
-                    ParkingIncome = month.ParkingRevenue,
+                    ParkingIncome = month.ParkingRevenue ?? 0,
 
-                    StorageIncome = month.StorageRevenue,
+                    StorageIncome = month.StorageRevenue ?? 0,
 
-                    PercentageRent = month.PercentageRent,
+                    PercentageRent = month.PercentageRent ?? 0,
 
-                    FreeRent = month.FreeRent,
+                    FreeRent = month.FreeRent ?? 0,
 
-                    BadDebt = month.BadDebt,
+                    BadDebt = month.BadDebt ?? 0,
 
-                    TotalRevenue = month.TotalRevenue,
+                    TotalRevenue = month.TotalRevenue ?? 0,
 
                     MiscIncome = 0,
                     RentAdjustment = 0,

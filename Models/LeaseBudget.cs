@@ -29,29 +29,29 @@ namespace FinAxisLeaseBudgeting.Models
         public short? BudgetMonth { get; set; }
 
         public int? BudgetYear { get; set; }
-        public string Month { get; set; }
-        public string AccountId { get; set; }
-        public string ChargeCode { get; set; }
+        public string? Month { get; set; }
+        public string? AccountId { get; set; }
+        public string? ChargeCode { get; set; }
 
         public decimal BaseRent { get; set; }
 
-        public decimal CamRecovery { get; set; }
+        public decimal? CamRecovery { get; set; }
 
-        public decimal TaxRecovery { get; set; }
+        public decimal? TaxRecovery { get; set; }
 
-        public decimal InsuranceRecovery { get; set; }
+        public decimal? InsuranceRecovery { get; set; }
 
-        public decimal ParkingRevenue { get; set; }
+        public decimal? ParkingRevenue { get; set; }
 
-        public decimal StorageRevenue { get; set; }
+        public decimal? StorageRevenue { get; set; }
 
-        public decimal PercentageRent { get; set; }
+        public decimal? PercentageRent { get; set; }
 
-        public decimal FreeRent { get; set; }
+        public decimal? FreeRent { get; set; }
 
-        public decimal BadDebt { get; set; }
+        public decimal? BadDebt { get; set; }
 
-        public decimal TotalRevenue { get; set; }
+        public decimal? TotalRevenue { get; set; }
 
 
     }
