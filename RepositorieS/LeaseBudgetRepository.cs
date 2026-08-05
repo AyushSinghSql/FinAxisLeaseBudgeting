@@ -1383,7 +1383,7 @@ BulkUpdateLeaseRevenueRequest request)
                     //    CultureInfo.InvariantCulture).Month,
                     BudgetMonth = month.BudgetMonth.GetValueOrDefault(),
 
-                    BudgetYear = response.BudgetYear,
+                    BudgetYear = month.BudgetYear.GetValueOrDefault(),
 
                     BaseRent = month.BaseRent,
 
