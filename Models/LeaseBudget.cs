@@ -72,6 +72,7 @@ namespace FinAxisLeaseBudgeting.Models
     public class GenerateLeaseBudgetRequest
     {
         public string PropertyId { get; set; }
+        public string BudgetType { get; set; }
 
         public int BudgetYear { get; set; }
 

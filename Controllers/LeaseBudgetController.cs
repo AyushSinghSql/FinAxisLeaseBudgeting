@@ -142,7 +142,7 @@ namespace FinAxisLeaseBudgeting.Controllers
         }
 
         [HttpDelete("BulkDeleteDetails")]
-        public async Task<IActionResult> BulkDeleteDetails([FromBody] int BudgetId,
+        public async Task<IActionResult> BulkDeleteDetails(int BudgetId,
             [FromBody] List<string> ChargeCode)
         {
             await _service.BulkDeleteAsync(BudgetId, ChargeCode);
