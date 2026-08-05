@@ -241,6 +241,7 @@ namespace FinAxisLeaseBudgeting.Models
         public string? AccountId { get; set; }
     }
 
+
     public class LeaseBudgetSearchRequest
     {
         public int BudgetYear { get; set; }
@@ -311,7 +312,7 @@ namespace FinAxisLeaseBudgeting.Models
     public class LeaseBudgetDetailDto
     {
         public long DetailId { get; set; }
-        public int BudgetMonth { get; set; }
+        public short BudgetMonth { get; set; }
         public int BudgetYear { get; set; }
         public decimal BaseRent { get; set; }
         public decimal CamRecovery { get; set; }
@@ -330,7 +331,18 @@ namespace FinAxisLeaseBudgeting.Models
         public int OccupiedDays { get; set; }
         public int DaysInMonth { get; set; }
         public decimal ProrationFactor { get; set; }
+        public string? ChargeCode { get; set; }
+        public string? AccountId { get; set; }
     }
+
+
+    public class LeaseBudgetDetailBulkRequest
+    {
+        public long BudgetId { get; set; }
+
+        public List<LeaseBudgetDetailDto> Details { get; set; } = new();
+    }
+
 
     public class BudgetChargeGroup
     {

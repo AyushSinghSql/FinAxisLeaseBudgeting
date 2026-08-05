@@ -26,6 +26,10 @@ string generatedBy);
 
         Task BulkUpdateRevenueAsync(BulkUpdateLeaseRevenueRequest request);
 
+        Task BulkUpsertAsync(List<PlLeaseBudgetDetail> details);
+
+        Task BulkDeleteAsync(List<long> detailIds);
+
         Task<LeaseBudgetDto?> GetBudgetByIdAsync(long budgetId);
 
          //RevenueCalculationResult Calculate(

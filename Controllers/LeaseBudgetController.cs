@@ -101,7 +101,7 @@ namespace FinAxisLeaseBudgeting.Controllers
 
             var budgets = await _context.PlLeaseBudgets
                 .Include(x => x.Details)
-                .Where(x => ids.Contains((int)x.BudgetId)) 
+                .Where(x => ids.Contains((int)x.BudgetId))
                 .ToListAsync();
 
             if (!budgets.Any())
@@ -126,6 +126,28 @@ namespace FinAxisLeaseBudgeting.Controllers
             }
 
             return Ok(new { message = $"{budgets.Count} lease budgets and their details deleted successfully.", deletedIds = budgets.Select(b => b.BudgetId).ToList() });
+        }
+
+        [HttpPost("BulkUpsertDetails")]
+        public async Task<IActionResult> BulkUpsertDetails([FromBody]
+        List<PlLeaseBudgetDetail> request)
+        {
+            await _service.BulkUpsertAsync(request);
+
+            return Ok(new
+            {
+                Success = true,
+                Message = "Budget details saved successfully."
+            });
+        }
+
+        [HttpDelete("BulkDeleteDetails")]
+        public async Task<IActionResult> BulkDeleteDetails(
+            [FromBody] List<long> DetailIds)
+        {
+            await _service.BulkDeleteAsync(DetailIds);
+
+            return Ok();
         }
     }
 }

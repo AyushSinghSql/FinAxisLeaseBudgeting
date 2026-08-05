@@ -1,6 +1,7 @@
 ﻿using FinAxisLeaseBudgeting.Data;
 using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.Models;
+using FinAxisLeaseBudgeting.Repositories;
 using FinAxisLeaseBudgeting.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
@@ -1473,254 +1474,36 @@ BulkUpdateLeaseRevenueRequest request)
             };
         }
 
-        //public RevenueCalculationResult Calculate(
-        //        LeaseMaster lease,
-        //        //PlLeaseRentSchedule rentSchedule,
-        //        BudgetAssumptionModel assumptions,
-        //        DateOnly budgetMonth)
-        //{
-        //    var result = new RevenueCalculationResult();
+        public async Task BulkUpsertAsync(List<PlLeaseBudgetDetail> details)
+        {
+            foreach (var detail in details)
+            {
+                if (detail.DetailId == 0)
+                {
+                    await _context.PlLeaseBudgetDetails.AddAsync(detail);
+                }
+                else
+                {
+                    _context.PlLeaseBudgetDetails.Update(detail);
+                }
+            }
 
-        //    //----------------------------------------------------------
-        //    // Base Rent
-        //    //----------------------------------------------------------
+            await _context.SaveChangesAsync();
+        }
 
-        //    //decimal baseRent = rentSchedule.MonthlyRent;
-        //    decimal baseRent = lease.ContractRent.GetValueOrDefault();
+        public async Task BulkDeleteAsync(List<long> detailIds)
+        {
+            var records = await _context.PlLeaseBudgetDetails
+                .Where(x => detailIds.Contains(x.DetailId))
+                .ToListAsync();
 
-        //    baseRent +=
-        //        baseRent *
-        //        assumptions.BaseRentEscalation /
-        //        100m;
+            _context.PlLeaseBudgetDetails.RemoveRange(records);
 
-        //    //----------------------------------------------------------
-        //    // CAM
-        //    //----------------------------------------------------------
+            await _context.SaveChangesAsync();
+        }
 
-        //    decimal cam = lease.CamRecovery;
-
-        //    cam +=
-        //        cam *
-        //        assumptions.CamGrowth /
-        //        100m;
-
-        //    //----------------------------------------------------------
-        //    // Tax
-        //    //----------------------------------------------------------
-
-        //    decimal tax = lease.TaxRecovery;
-
-        //    tax +=
-        //        tax *
-        //        assumptions.TaxGrowth /
-        //        100m;
-
-        //    //----------------------------------------------------------
-        //    // Insurance
-        //    //----------------------------------------------------------
-
-        //    decimal insurance = lease.InsuranceRecovery;
-
-        //    insurance +=
-        //        insurance *
-        //        assumptions.InsuranceGrowth /
-        //        100m;
-
-        //    //----------------------------------------------------------
-        //    // Parking
-        //    //----------------------------------------------------------
-
-        //    decimal parking = lease.ParkingIncome;
-
-        //    parking +=
-        //        parking *
-        //        assumptions.ParkingGrowth /
-        //        100m;
-
-        //    //----------------------------------------------------------
-        //    // Storage
-        //    //----------------------------------------------------------
-
-        //    decimal storage = lease.StorageIncome;
-
-        //    storage +=
-        //        storage *
-        //        assumptions.StorageGrowth /
-        //        100m;
-
-        //    //----------------------------------------------------------
-        //    // Percentage Rent
-        //    //----------------------------------------------------------
-
-        //    decimal percentageRent = lease.PercentageRent;
-
-        //    //----------------------------------------------------------
-        //    // Misc
-        //    //----------------------------------------------------------
-
-        //    decimal misc = lease.MiscIncome;
-
-        //    //----------------------------------------------------------
-        //    // Free Rent
-        //    //----------------------------------------------------------
-
-        //    decimal freeRent = 0;
-
-        //    if (assumptions.FreeRentMonths > 0)
-        //    {
-        //        if (budgetMonth.Month <= assumptions.FreeRentMonths)
-        //        {
-        //            freeRent = baseRent;
-        //            baseRent = 0;
-        //        }
-        //    }
-
-        //    //----------------------------------------------------------
-        //    // Vacancy
-        //    //----------------------------------------------------------
-
-        //    decimal vacancy =
-        //        (baseRent + cam)
-        //        * assumptions.Vacancy
-        //        / 100m;
-
-        //    //----------------------------------------------------------
-        //    // Bad Debt
-        //    //----------------------------------------------------------
-
-        //    decimal badDebt =
-        //        (
-        //            baseRent +
-        //            cam +
-        //            tax +
-        //            insurance +
-        //            parking +
-        //            storage +
-        //            percentageRent +
-        //            misc
-        //        )
-        //        *
-        //        assumptions.BadDebt
-        //        /
-        //        100m;
-
-        //    //----------------------------------------------------------
-        //    // Total
-        //    //----------------------------------------------------------
-
-        //    decimal total =
-        //        baseRent +
-        //        cam +
-        //        tax +
-        //        insurance +
-        //        parking +
-        //        storage +
-        //        percentageRent +
-        //        misc
-        //        - vacancy
-        //        - badDebt;
-
-        //    //----------------------------------------------------------
-        //    // Result
-        //    //----------------------------------------------------------
-
-        //    result.BaseRent = baseRent;
-        //    result.CamRecovery = cam;
-        //    result.TaxRecovery = tax;
-        //    result.InsuranceRecovery = insurance;
-        //    result.ParkingIncome = parking;
-        //    result.StorageIncome = storage;
-        //    result.PercentageRent = percentageRent;
-        //    result.MiscIncome = misc;
-        //    result.FreeRent = freeRent;
-        //    result.VacancyLoss = vacancy;
-        //    result.BadDebt = badDebt;
-        //    result.TotalRevenue = total;
-
-        //    //----------------------------------------------------------
-        //    // Components
-        //    //----------------------------------------------------------
-
-        //    result.Components.Add(new RevenueComponent
-        //    {
-        //        ComponentType = "BASE_RENT",
-        //        Description = "Base Rent",
-        //        Amount = baseRent
-        //    });
-
-        //    result.Components.Add(new RevenueComponent
-        //    {
-        //        ComponentType = "CAM",
-        //        Description = "CAM Recovery",
-        //        Amount = cam
-        //    });
-
-        //    result.Components.Add(new RevenueComponent
-        //    {
-        //        ComponentType = "TAX",
-        //        Description = "Tax Recovery",
-        //        Amount = tax
-        //    });
-
-        //    result.Components.Add(new RevenueComponent
-        //    {
-        //        ComponentType = "INSURANCE",
-        //        Description = "Insurance Recovery",
-        //        Amount = insurance
-        //    });
-
-        //    result.Components.Add(new RevenueComponent
-        //    {
-        //        ComponentType = "PARKING",
-        //        Description = "Parking",
-        //        Amount = parking
-        //    });
-
-        //    result.Components.Add(new RevenueComponent
-        //    {
-        //        ComponentType = "STORAGE",
-        //        Description = "Storage",
-        //        Amount = storage
-        //    });
-
-        //    result.Components.Add(new RevenueComponent
-        //    {
-        //        ComponentType = "PERCENTAGE_RENT",
-        //        Description = "Percentage Rent",
-        //        Amount = percentageRent
-        //    });
-
-        //    result.Components.Add(new RevenueComponent
-        //    {
-        //        ComponentType = "MISC",
-        //        Description = "Misc Income",
-        //        Amount = misc
-        //    });
-
-        //    result.Components.Add(new RevenueComponent
-        //    {
-        //        ComponentType = "FREE_RENT",
-        //        Description = "Free Rent",
-        //        Amount = -freeRent
-        //    });
-
-        //    result.Components.Add(new RevenueComponent
-        //    {
-        //        ComponentType = "VACANCY",
-        //        Description = "Vacancy",
-        //        Amount = -vacancy
-        //    });
-
-        //    result.Components.Add(new RevenueComponent
-        //    {
-        //        ComponentType = "BAD_DEBT",
-        //        Description = "Bad Debt",
-        //        Amount = -badDebt
-        //    });
-
-        //    return result;
-        //}
     }
+
 
 
 }
