@@ -82,7 +82,7 @@ namespace FinAxisLeaseBudgeting.Controllers
                     .Select(x => new DropdownDto
                     {
                         Id = x.AccountId,
-                        Name = x.AccountCode + " - " + x.AccountName
+                        Name = x.AccountName
                     })
                     .ToListAsync();
             }
@@ -93,8 +93,8 @@ namespace FinAxisLeaseBudgeting.Controllers
                     .OrderBy(x => x.ChargeCode)
                     .Select(x => new DropdownDto
                     {
-                        Id = x.ChargeCode,
-                        Name = x.ChargeCode + " - " + x.ChargeDescription
+                        Id = x.GlAccount,
+                        Name = x.ChargeCode
                     })
                     .ToListAsync();
             }
@@ -109,7 +109,7 @@ namespace FinAxisLeaseBudgeting.Controllers
                     .Select(x => new DropdownDto
                     {
                         Id = x.AccountId,
-                        Name = x.AccountCode + " - " + x.AccountName
+                        Name = x.AccountName
                     })
                     .ToListAsync();
 
@@ -119,7 +119,7 @@ namespace FinAxisLeaseBudgeting.Controllers
                     .Select(x => new DropdownDto
                     {
                         Id = x.GlAccount,
-                        Name = x.GlAccount + " - " + x.ChargeCode
+                        Name = x.ChargeCode
                     })
                     .ToListAsync();
 
