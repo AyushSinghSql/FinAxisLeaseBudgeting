@@ -28,7 +28,7 @@ string generatedBy);
 
         Task BulkUpsertAsync(List<PlLeaseBudgetDetail> details);
 
-        Task BulkDeleteAsync(List<long> detailIds);
+        Task BulkDeleteAsync(int BudgetId, List<string> chargeCodes);
 
         Task<LeaseBudgetDto?> GetBudgetByIdAsync(long budgetId);
 

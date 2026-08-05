@@ -1491,10 +1491,10 @@ BulkUpdateLeaseRevenueRequest request)
             await _context.SaveChangesAsync();
         }
 
-        public async Task BulkDeleteAsync(List<long> detailIds)
+        public async Task BulkDeleteAsync(int BudgetId, List<string> chargeCodes)
         {
             var records = await _context.PlLeaseBudgetDetails
-                .Where(x => detailIds.Contains(x.DetailId))
+                .Where(x => x.BudgetId == BudgetId && chargeCodes.Contains(x.ChargeCode))
                 .ToListAsync();
 
             _context.PlLeaseBudgetDetails.RemoveRange(records);
