@@ -117,12 +117,15 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             //=========================================
             // Filter by Property and Unit
             //=========================================
-            foreach (var property in request.Properties)
+            if (request.Properties != null)
             {
-                query = string.IsNullOrEmpty(property.UnitIds)
-                    ? query.Where(x => x.PropertyId == property.PropertyId)
-                    : query.Where(x => x.PropertyId == property.PropertyId &&
-                                       x.UnitId == property.UnitIds);
+                foreach (var property in request.Properties)
+                {
+                    query = string.IsNullOrEmpty(property.UnitIds)
+                        ? query.Where(x => x.PropertyId == property.PropertyId)
+                        : query.Where(x => x.PropertyId == property.PropertyId &&
+                                           x.UnitId == property.UnitIds);
+                }
             }
 
             return await query

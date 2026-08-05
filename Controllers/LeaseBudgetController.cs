@@ -95,20 +95,27 @@ namespace FinAxisLeaseBudgeting.Controllers
         public async Task<IActionResult> GetBudgets([FromQuery] string? PropertyId, [FromQuery] string? UnitId, [FromQuery] string? BudgetType)
         {
 
-            List<PlLeaseBudget> budgets = new List<PlLeaseBudget>();
-            budgets = await _service.GetBudgetsAsync(new LeaseBudgetSearchRequest
-            {
-                Properties = new List<PropertyUnitSearch>
-                {
-                    new PropertyUnitSearch
-                    {
-                        PropertyId = PropertyId,
-                        UnitIds = UnitId
-                    }
-                },
-                BudgetType = BudgetType
 
-            });
+
+
+            List<PlLeaseBudget> budgets = new List<PlLeaseBudget>();
+            var searchRequest = new LeaseBudgetSearchRequest
+            {
+                BudgetType = BudgetType,
+                Properties = string.IsNullOrWhiteSpace(PropertyId) &&
+                             string.IsNullOrWhiteSpace(UnitId)
+                    ? null
+                    : new List<PropertyUnitSearch>
+                    {
+            new PropertyUnitSearch
+            {
+                PropertyId = PropertyId,
+                UnitIds = UnitId
+            }
+                    }
+            };
+
+            budgets = await _service.GetBudgetsAsync(searchRequest);
 
             return Ok(budgets);
         }
