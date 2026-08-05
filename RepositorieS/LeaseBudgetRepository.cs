@@ -1493,7 +1493,7 @@ BulkUpdateLeaseRevenueRequest request)
         {
             foreach (var detail in details)
             {
-                //detail.Budget = null;
+                detail.Budget = null;
                 if (detail.DetailId == 0)
                 {
                     await _context.PlLeaseBudgetDetails.AddAsync(detail);
