@@ -66,20 +66,65 @@ namespace FinAxisLeaseBudgeting.Controllers
 
         [HttpGet]
         [Route("GetExpenseAccountDropdown")]
-        public async Task<ActionResult<IEnumerable<DropdownDto>>> GetExpenseAccountDropdown()
+        public async Task<ActionResult<IEnumerable<DropdownDto>>> GetExpenseAccountDropdown([FromQuery] string budgetType)
         {
-            var result = await _context.Accounts
-                .AsNoTracking()
-                .Where(x =>
-                    x.IsActive &&
-                    x.AccountType == "Expense")
-                .OrderBy(x => x.AccountCode)
-                .Select(x => new DropdownDto
-                {
-                    Id = x.AccountId,
-                    Name = x.AccountCode + " - " + x.AccountName
-                })
-                .ToListAsync();
+            List<DropdownDto> result = new List<DropdownDto>();
+            var normalizedBudgetType = budgetType?.ToLower();
+
+            if (normalizedBudgetType == "Expense")
+            {
+                result = await _context.Accounts
+                    .AsNoTracking()
+                    .Where(x =>
+                        x.IsActive &&
+                        x.AccountType == "expense")
+                    .OrderBy(x => x.AccountCode)
+                    .Select(x => new DropdownDto
+                    {
+                        Id = x.AccountId,
+                        Name = x.AccountCode + " - " + x.AccountName
+                    })
+                    .ToListAsync();
+            }
+            else if (normalizedBudgetType == "revenue")
+            {
+                result = await _context.ChargeCdGlAccounts
+                    .AsNoTracking()
+                    .OrderBy(x => x.ChargeCode)
+                    .Select(x => new DropdownDto
+                    {
+                        Id = x.ChargeCode,
+                        Name = x.ChargeCode + " - " + x.ChargeDescription
+                    })
+                    .ToListAsync();
+            }
+            else
+            {
+                var accounts = await _context.Accounts
+                    .AsNoTracking()
+                    .Where(x =>
+                        x.IsActive &&
+                        x.AccountType == "Expense")
+                    .OrderBy(x => x.AccountCode)
+                    .Select(x => new DropdownDto
+                    {
+                        Id = x.AccountId,
+                        Name = x.AccountCode + " - " + x.AccountName
+                    })
+                    .ToListAsync();
+
+                var chargeCodes = await _context.ChargeCdGlAccounts
+                    .AsNoTracking()
+                    .OrderBy(x => x.ChargeCode)
+                    .Select(x => new DropdownDto
+                    {
+                        Id = x.ChargeCode,
+                        Name = x.ChargeCode + " - " + x.ChargeDescription
+                    })
+                    .ToListAsync();
+
+                result = accounts.Concat(chargeCodes).ToList();
+            }
 
             return Ok(result);
         }
