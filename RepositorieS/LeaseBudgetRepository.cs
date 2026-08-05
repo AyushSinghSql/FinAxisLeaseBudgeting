@@ -454,97 +454,99 @@ GenerateLeaseBudgetRequest request)
                     request.UnitId,
                     leases.FirstOrDefault()?.LeaseId);
 
-            //==========================================================
-            // Calculate Revenue
-            //==========================================================
-
-            var revenue =
-                CalculateMonthlyLeaseRevenueV1(request,
-                    leases.FirstOrDefault(),
-                    assumptions,
-                    currentMonth);
-
-            while (currentMonth <= endMonth)
+            if (request.BudgetType.ToLower() == "revenue")
             {
-                var monthBudget = new LeaseBudgetMonth();
-                foreach (var charge in ChargeCodes)
+                //==========================================================
+                // Calculate Revenue
+                //==========================================================
+
+                var revenue =
+                    CalculateMonthlyLeaseRevenueV1(request,
+                        leases.FirstOrDefault(),
+                        assumptions,
+                        currentMonth);
+
+                while (currentMonth <= endMonth)
                 {
-                    var monthStart = currentMonth.ToDateTime(TimeOnly.MinValue);
-
-                    monthBudget = new LeaseBudgetMonth
+                    var monthBudget = new LeaseBudgetMonth();
+                    foreach (var charge in ChargeCodes)
                     {
-                        BudgetMonth = (short)currentMonth.Month,
-                        BudgetYear = currentMonth.Year,
-                        Month = monthStart.ToString("MMM yyyy"),
-                        AccountId = charge.AccountId,
-                        ChargeCode = charge.ChargeCode
-                    };
+                        var monthStart = currentMonth.ToDateTime(TimeOnly.MinValue);
 
-                    foreach (var lease in leases)
-                    {
-                        // Skip lease if it doesn't overlap this month
-                        if (lease.LeaseStartDate > DateOnly.FromDateTime(monthStart.AddMonths(1).AddDays(-1)))
-                            continue;
-
-                        if (lease.LeaseEndDate < DateOnly.FromDateTime(monthStart))
-                            continue;
-
-                        switch (charge.ChargeCode.ToUpper())
+                        monthBudget = new LeaseBudgetMonth
                         {
-                            case "RENT":
-                                monthBudget.BaseRent = revenue.BaseRent;
-                                break;
-                            case "PARK":
-                                monthBudget.BaseRent = revenue.Parking;
-                                break;
-                            case "CAM":
-                                monthBudget.BaseRent = revenue.Cam;
-                                break;
-                            case "UTIL":
-                                monthBudget.BaseRent = revenue.UTIL;
-                                break;
-                            case "STOR":
-                                monthBudget.BaseRent = revenue.Storage;
-                                break;
-                            case "SERV":
-                                monthBudget.BaseRent = revenue.ServiceCharge;
-                                break;
-                            case "PEN":
-                                monthBudget.BaseRent = revenue.Penalty;
-                                break;
-                            case "SDDEP":
-                                monthBudget.BaseRent = revenue.Deposit;
-                                break;
-                            case "FITOUT":
-                                monthBudget.BaseRent = revenue.Fitout;
-                                break;
-                            case "DISC":
-                                monthBudget.BaseRent = revenue.Discount;
-                                break;
-                            case "OTHINC":
-                                monthBudget.BaseRent = revenue.MiscIncome;
-                                break;
-                            case "MAINT":
-                                monthBudget.BaseRent = revenue.Maintainance;
-                                break;
+                            BudgetMonth = (short)currentMonth.Month,
+                            BudgetYear = currentMonth.Year,
+                            Month = monthStart.ToString("MMM yyyy"),
+                            AccountId = charge.AccountId,
+                            ChargeCode = charge.ChargeCode
+                        };
+
+                        foreach (var lease in leases)
+                        {
+                            // Skip lease if it doesn't overlap this month
+                            if (lease.LeaseStartDate > DateOnly.FromDateTime(monthStart.AddMonths(1).AddDays(-1)))
+                                continue;
+
+                            if (lease.LeaseEndDate < DateOnly.FromDateTime(monthStart))
+                                continue;
+
+                            switch (charge.ChargeCode.ToUpper())
+                            {
+                                case "RENT":
+                                    monthBudget.BaseRent = revenue.BaseRent;
+                                    break;
+                                case "PARK":
+                                    monthBudget.BaseRent = revenue.Parking;
+                                    break;
+                                case "CAM":
+                                    monthBudget.BaseRent = revenue.Cam;
+                                    break;
+                                case "UTIL":
+                                    monthBudget.BaseRent = revenue.UTIL;
+                                    break;
+                                case "STOR":
+                                    monthBudget.BaseRent = revenue.Storage;
+                                    break;
+                                case "SERV":
+                                    monthBudget.BaseRent = revenue.ServiceCharge;
+                                    break;
+                                case "PEN":
+                                    monthBudget.BaseRent = revenue.Penalty;
+                                    break;
+                                case "SDDEP":
+                                    monthBudget.BaseRent = revenue.Deposit;
+                                    break;
+                                case "FITOUT":
+                                    monthBudget.BaseRent = revenue.Fitout;
+                                    break;
+                                case "DISC":
+                                    monthBudget.BaseRent = revenue.Discount;
+                                    break;
+                                case "OTHINC":
+                                    monthBudget.BaseRent = revenue.MiscIncome;
+                                    break;
+                                case "MAINT":
+                                    monthBudget.BaseRent = revenue.Maintainance;
+                                    break;
+                            }
                         }
+                        response.MonthlyBudget.Add(monthBudget);
+
                     }
-                    response.MonthlyBudget.Add(monthBudget);
-
+                    currentMonth = currentMonth.AddMonths(1);
                 }
-                currentMonth = currentMonth.AddMonths(1);
+
+                //==============================================================
+                // Total Revenue
+                //==============================================================
+
+                response.TotalRevenue = response.MonthlyBudget.Sum(x => x.BaseRent);
+
+                //==============================================================
+                // Save Budget
+                //==============================================================
             }
-
-            //==============================================================
-            // Total Revenue
-            //==============================================================
-
-            response.TotalRevenue = response.MonthlyBudget.Sum(x => x.BaseRent);
-
-            //==============================================================
-            // Save Budget
-            //==============================================================
-
             await SaveLeaseBudgetAsyncV1(
                 response,
                 request.PropertyId,
@@ -1348,6 +1350,11 @@ BulkUpdateLeaseRevenueRequest request)
             _context.PlLeaseBudgets.Add(budget);
 
             await _context.SaveChangesAsync();
+
+            if (budgetType.ToLower() == "expense")
+            {
+                return budget.BudgetId;
+            }
 
             foreach (var month in response.MonthlyBudget)
             {
