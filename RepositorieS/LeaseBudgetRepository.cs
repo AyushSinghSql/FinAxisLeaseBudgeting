@@ -104,25 +104,32 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
         public async Task<List<PlLeaseBudget>> GetBudgetsAsync(LeaseBudgetSearchRequest request)
         {
-            var query = _context.PlLeaseBudgets
-                .AsQueryable();
+            var query = _context.PlLeaseBudgets.AsQueryable();
 
-            var budgets = await query.ToListAsync();
-
-            // Check if properties filter is null or empty. If so, return all budgets.
-            if (request.Properties[0].PropertyId == null || !request.Properties.Any())
+            //=========================================
+            // Filter by Budget Type
+            //=========================================
+            if (!string.IsNullOrWhiteSpace(request.BudgetType))
             {
-                return budgets;
+                query = query.Where(x => x.BudgetType.ToLower() == request.BudgetType.ToLower());
             }
 
-            // Otherwise, filter by the requested properties and units
-            var result = budgets.Where(x =>
-                request.Properties.Any(p =>
-                    p.PropertyId == x.PropertyId &&
-                    p.UnitIds == x.UnitId))
-                .ToList();
+            //=========================================
+            // Filter by Property and Unit
+            //=========================================
+            foreach (var property in request.Properties)
+            {
+                query = string.IsNullOrEmpty(property.UnitIds)
+                    ? query.Where(x => x.PropertyId == property.PropertyId)
+                    : query.Where(x => x.PropertyId == property.PropertyId &&
+                                       x.UnitId == property.UnitIds);
+            }
 
-            return result;
+            return await query
+                .OrderBy(x => x.PropertyId)
+                .ThenBy(x => x.UnitId)
+                .ThenByDescending(x => x.GeneratedOn)
+                .ToListAsync();
         }
 
         public async Task<LeaseBudgetResponse> GenerateRevenueBudgetAsync_Working(
@@ -1353,6 +1360,7 @@ BulkUpdateLeaseRevenueRequest request)
 
             if (budgetType.ToLower() == "expense")
             {
+                await tran.CommitAsync();
                 return budget.BudgetId;
             }
 
@@ -1485,6 +1493,7 @@ BulkUpdateLeaseRevenueRequest request)
         {
             foreach (var detail in details)
             {
+                //detail.Budget = null;
                 if (detail.DetailId == 0)
                 {
                     await _context.PlLeaseBudgetDetails.AddAsync(detail);

@@ -71,8 +71,28 @@ namespace FinAxisLeaseBudgeting.Controllers
             return Ok(budget);
         }
 
+        //[HttpGet("GetBudgets")]
+        //public async Task<IActionResult> GetBudgets([FromQuery] string? PropertyId, [FromQuery] string? UnitId)
+        //{
+
+        //    List<PlLeaseBudget> budgets = new List<PlLeaseBudget>();
+        //    budgets = await _service.GetBudgetsAsync(new LeaseBudgetSearchRequest
+        //    {
+        //        Properties = new List<PropertyUnitSearch>
+        //        {
+        //            new PropertyUnitSearch
+        //            {
+        //                PropertyId = PropertyId,
+        //                UnitIds = UnitId
+        //            }
+        //        }
+        //    });
+
+        //    return Ok(budgets);
+        //}
+
         [HttpGet("GetBudgets")]
-        public async Task<IActionResult> GetBudgets([FromQuery] string? PropertyId, [FromQuery] string? UnitId)
+        public async Task<IActionResult> GetBudgets([FromQuery] string? PropertyId, [FromQuery] string? UnitId, [FromQuery] string? BudgetType)
         {
 
             List<PlLeaseBudget> budgets = new List<PlLeaseBudget>();
@@ -85,7 +105,9 @@ namespace FinAxisLeaseBudgeting.Controllers
                         PropertyId = PropertyId,
                         UnitIds = UnitId
                     }
-                }
+                },
+                BudgetType = BudgetType
+
             });
 
             return Ok(budgets);
