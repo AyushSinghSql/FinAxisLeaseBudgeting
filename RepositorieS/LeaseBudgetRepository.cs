@@ -76,6 +76,111 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
             return result;
         }
+
+        public async Task<List<LeaseBudgetDto>> SearchAsyncV1(LeaseBudgetSearchRequest request)
+        {
+            var budgets = await _context.PlLeaseBudgets
+                .Include(x => x.Details)
+                .ToListAsync();
+
+            var result = budgets
+                .Where(x => request.Properties.Any(p =>
+                    p.PropertyId == x.PropertyId &&
+                    p.UnitIds == x.UnitId))
+                .ToList();
+
+            var keys = request.Properties
+                .Select(p => $"{p.PropertyId}|{p.UnitIds}")
+                .ToHashSet();
+
+            var leases = await _context.LeaseMasters
+                .Where(x => keys.Contains(x.PropertyId + "|" + x.UnitId))
+                .ToDictionaryAsync(x => x.PropertyId + "|" + x.UnitId, x => x.TenantCode);
+
+            foreach (var budget in result)
+            {
+                var detail = budget.Details.FirstOrDefault();
+                budget.TenantId = leases.GetValueOrDefault($"{budget.PropertyId}|{budget.UnitId}");
+                budget.ChargeCode = detail?.ChargeCode;
+                budget.AccountId = detail?.AccountId;
+            }
+
+            // Add units without budgets
+            foreach (var property in request.Properties)
+            {
+                bool exists = result.Any(x =>
+                    x.PropertyId == property.PropertyId &&
+                    x.UnitId == property.UnitIds);
+
+                if (!exists)
+                {
+                    result.Add(new PlLeaseBudget
+                    {
+                        PropertyId = property.PropertyId,
+                        TenantId = leases.ContainsKey(property.UnitIds) ? leases[property.UnitIds] : string.Empty,
+                        UnitId = property.UnitIds,
+                        LeaseId = string.Empty,
+                        BudgetYear = 0,
+                        BudgetVersion = 0,
+                        BudgetType = null,
+                        Status = "Not Created",
+                        TotalBudget = 0,
+                        Details = new List<PlLeaseBudgetDetail>(),
+                        ChargeCode = null,
+                        AccountId = null
+                    });
+                }
+            }
+
+            return result.Select(budget => new LeaseBudgetDto
+            {
+                BudgetId = budget.BudgetId,
+                PropertyId = budget.PropertyId,
+                UnitId = budget.UnitId,
+                LeaseId = budget.LeaseId,
+                Version = budget.BudgetVersion,
+                BudgetType = budget.BudgetType,
+                BudgetStart = budget.StartDate,
+                BudgetEnd = budget.EndDate,
+                Status = budget.Status,
+                Groups = budget.Details
+            .GroupBy(x => new { x.ChargeCode, x.AccountId })
+            .Select(g => new LeaseBudgetChargeGroupDto
+            {
+                ChargeCode = g.Key.ChargeCode,
+                AccountId = g.Key.AccountId,
+                Details = g.OrderBy(x => x.BudgetYear)
+                           .ThenBy(x => x.BudgetMonth)
+                           .Select(d => new LeaseBudgetDetailDto
+                           {
+                               DetailId = d.DetailId,
+                               BudgetMonth = d.BudgetMonth,
+                               BudgetYear = d.BudgetYear,
+                               BaseRent = d.BaseRent,
+                               CamRecovery = d.CamRecovery,
+                               TaxRecovery = d.TaxRecovery,
+                               InsuranceRecovery = d.InsuranceRecovery,
+                               ParkingIncome = d.ParkingIncome,
+                               StorageIncome = d.StorageIncome,
+                               PercentageRent = d.PercentageRent,
+                               MiscIncome = d.MiscIncome,
+                               RentAdjustment = d.RentAdjustment,
+                               FreeRent = d.FreeRent,
+                               RentAbatement = d.RentAbatement,
+                               VacancyLoss = d.VacancyLoss,
+                               BadDebt = d.BadDebt,
+                               TotalRevenue = d.TotalRevenue,
+                               OccupiedDays = d.OccupiedDays,
+                               DaysInMonth = d.DaysInMonth,
+                               ProrationFactor = d.ProrationFactor
+                           })
+                           .ToList()
+            })
+            .ToList()
+            }).ToList();
+
+            //return result;
+        }
         public async Task<List<PlLeaseBudget>> SearchAsync_Working(LeaseBudgetSearchRequest request)
         {
             var query = _context.PlLeaseBudgets
@@ -442,14 +547,25 @@ GenerateLeaseBudgetRequest request)
             // Generate Budget Month by Month
             //==============================================================
 
+            //var currentMonth = new DateOnly(
+            //    request.LeaseStartDate?.Year ?? 0,
+            //    request.LeaseStartDate?.Month ?? 0,
+            //    1);
+
+            //var endMonth = new DateOnly(
+            //    request.LeaseEndDate?.Year ?? 0,
+            //    request.LeaseEndDate?.Month ?? 0,
+            //    1);
+
+
             var currentMonth = new DateOnly(
-                request.LeaseStartDate?.Year ?? 0,
-                request.LeaseStartDate?.Month ?? 0,
+                request.BudgetStartDate?.Year ?? 0,
+                request.BudgetStartDate?.Month ?? 0,
                 1);
 
             var endMonth = new DateOnly(
-                request.LeaseEndDate?.Year ?? 0,
-                request.LeaseEndDate?.Month ?? 0,
+                request.BudgetEndDate?.Year ?? 0,
+                request.BudgetEndDate?.Month ?? 0,
                 1);
 
             //==========================================================
@@ -476,6 +592,8 @@ GenerateLeaseBudgetRequest request)
                         assumptions,
                         currentMonth);
 
+
+
                 while (currentMonth <= endMonth)
                 {
                     var monthBudget = new LeaseBudgetMonth();
@@ -498,8 +616,30 @@ GenerateLeaseBudgetRequest request)
                             if (lease.LeaseStartDate > DateOnly.FromDateTime(monthStart.AddMonths(1).AddDays(-1)))
                                 continue;
 
-                            if (lease.LeaseEndDate < DateOnly.FromDateTime(monthStart))
-                                continue;
+                            //if (lease.LeaseEndDate < DateOnly.FromDateTime(monthStart))
+                            //    continue;
+
+                            bool leaseExpired = lease == null || currentMonth > lease.LeaseEndDate.Value;
+
+                            if (!leaseExpired)
+                            {
+                                // Active lease
+                                revenue = CalculateMonthlyLeaseRevenueV1(
+                                    request,
+                                    lease,
+                                    assumptions,
+                                    currentMonth);
+                            }
+                            else
+                            {
+                                // Lease expired
+                                revenue = CalculatePostLeaseRevenue(
+                                    request,
+                                    lease,
+                                    assumptions,
+                                    currentMonth);
+                            }
+
 
                             switch (charge.ChargeCode.ToUpper())
                             {
@@ -992,6 +1132,78 @@ DateOnly budgetMonth)
             return result;
         }
 
+        private LeaseRevenueResult CalculatePostLeaseRevenue(
+            GenerateLeaseBudgetRequest request,
+            LeaseMaster lease,
+            BudgetAssumptionModel assumptions,
+            DateOnly month)
+        {
+            var result = new LeaseRevenueResult();
+
+            decimal marketRent =
+                lease.ContractRent ?? 0;
+
+            //==========================================
+            // Renewal Probability
+            //==========================================
+
+            decimal renewalProbability =
+                assumptions.RenewalProbability / 100m;
+
+            //==========================================
+            // Renewal Increase
+            //==========================================
+
+            decimal renewalIncrease =
+                assumptions.RenewalIncrease / 100m;
+
+            //==========================================
+            // Vacancy
+            //==========================================
+
+            decimal vacancy =
+                assumptions.Vacancy / 100m;
+
+            //==========================================
+            // Market Growth
+            //==========================================
+
+            decimal growth =
+                assumptions.MarketRentGrowth / 100m;
+
+            marketRent *= (1 + growth);
+
+            var renewedRent =
+                marketRent * (1 + renewalIncrease);
+
+            result.BaseRent =
+                renewedRent *
+                renewalProbability *
+                (1 - vacancy);
+
+            result.Cam =
+                result.BaseRent *
+                assumptions.CamGrowth / 100m;
+
+            //result.UTIL =
+            //    result.BaseRent *
+            //    assumptions.UtilityGrowth / 100m;
+
+            result.Storage =
+                result.BaseRent *
+                assumptions.StorageGrowth / 100m;
+
+            result.Parking =
+                result.BaseRent *
+                assumptions.ParkingGrowth / 100m;
+
+            result.BadDebt =
+                result.BaseRent *
+                assumptions.BadDebt / 100m;
+
+            return result;
+        }
+
         private LeaseRevenueResult CalculateMonthlyLeaseRevenue(
     LeaseMaster lease,
     BudgetAssumptionModel assumptions,
@@ -1435,7 +1647,7 @@ BulkUpdateLeaseRevenueRequest request)
         }
 
 
-        public async Task<LeaseBudgetDto?> GetBudgetByIdAsync(long budgetId)
+        public async Task<LeaseBudgetDto?> GetBudgetByIdAsync(long? budgetId)
         {
             var budget = await _context.PlLeaseBudgets
                 .Include(x => x.Details)
@@ -1521,6 +1733,10 @@ BulkUpdateLeaseRevenueRequest request)
             await _context.SaveChangesAsync();
         }
 
+        public Task<LeaseBudgetDto?> GetBudgetByIdAsync(long budgetId)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 
