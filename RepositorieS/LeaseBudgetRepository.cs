@@ -1647,7 +1647,7 @@ BulkUpdateLeaseRevenueRequest request)
         }
 
 
-        public async Task<LeaseBudgetDto?> GetBudgetByIdAsync(long? budgetId)
+        public async Task<LeaseBudgetDto?> GetBudgetByIdAsync(long budgetId)
         {
             var budget = await _context.PlLeaseBudgets
                 .Include(x => x.Details)
@@ -1733,10 +1733,10 @@ BulkUpdateLeaseRevenueRequest request)
             await _context.SaveChangesAsync();
         }
 
-        public Task<LeaseBudgetDto?> GetBudgetByIdAsync(long budgetId)
-        {
-            throw new NotImplementedException();
-        }
+        //public Task<LeaseBudgetDto?> GetBudgetByIdAsync(long budgetId)
+        //{
+        //    throw new NotImplementedException();
+        //}
     }
 
 
