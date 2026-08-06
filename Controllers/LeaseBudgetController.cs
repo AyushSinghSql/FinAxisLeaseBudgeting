@@ -5,6 +5,7 @@ using FinAxisLeaseBudgeting.RepositorieS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PlanningAPI.Models;
 
 namespace FinAxisLeaseBudgeting.Controllers
 {
@@ -177,6 +178,65 @@ namespace FinAxisLeaseBudgeting.Controllers
             await _service.BulkDeleteAsync(BudgetId, ChargeCode);
 
             return Ok();
+        }
+
+        [HttpPut("UpdateBudgetStatus")]
+        public async Task<IActionResult> UpdateProjectPlan(PlLeaseBudget budget)
+        {
+            try
+            {
+                var existingPlan = await _context.PlLeaseBudgets
+
+                        .AsNoTracking()
+
+                        .FirstOrDefaultAsync(x => x.BudgetId == budget.BudgetId);
+
+
+                if (existingPlan == null)
+
+                    return NotFound($"Property budget with ID {budget?.BudgetId} not found.");
+
+
+
+                var success = await _service.UpdateProperityBudgetAsync(budget);
+
+                if (!success)
+
+                    return NotFound($"Property budget with ID {budget?.BudgetId} not found.");
+
+                string actionDetails;
+
+
+                if (existingPlan.Status != budget.Status)
+
+                {
+
+                    actionDetails =
+
+                        $"Status changed from {existingPlan.Status} to {budget.Status}";
+
+                }
+
+                else
+                {
+
+                    actionDetails =
+
+                        $"{budget.BudgetType} budget updated";
+
+                }
+
+
+                await _context.SaveChangesAsync();
+
+                //await _pl_ForecastService.CalculateRevenueCost(plan.PlId.GetValueOrDefault(), plan.TemplateId.GetValueOrDefault(), plan.Type);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }

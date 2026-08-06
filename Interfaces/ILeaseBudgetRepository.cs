@@ -33,6 +33,8 @@ string generatedBy);
 
         Task<LeaseBudgetDto?> GetBudgetByIdAsync(long budgetId);
 
+        Task<bool> UpdateProperityBudgetAsync(PlLeaseBudget budget);
+
          //RevenueCalculationResult Calculate(
          //       LeaseMaster lease,
          //       //PlLeaseRentSchedule rentSchedule,

@@ -1562,7 +1562,7 @@ BulkUpdateLeaseRevenueRequest request)
                 StartDate = startDate ?? DateOnly.MinValue,
                 EndDate = endDate ?? DateOnly.MaxValue,
 
-                Status = "Draft",
+                Status = "In Progress",
 
                 TotalBudget = response.TotalRevenue,
 
@@ -1733,10 +1733,41 @@ BulkUpdateLeaseRevenueRequest request)
             await _context.SaveChangesAsync();
         }
 
-        //public Task<LeaseBudgetDto?> GetBudgetByIdAsync(long budgetId)
-        //{
-        //    throw new NotImplementedException();
-        //}
+        public async Task<bool> UpdateProperityBudgetAsync(PlLeaseBudget budget)
+        {
+            try
+            {
+                var existing = await _context.PlLeaseBudgets.FindAsync(budget.BudgetId);
+
+                if(existing == null)
+                {
+                    return false;
+                }
+
+                if(budget.FinalVersion == true)
+                {
+                    bool alreadyExists = await _context.PlLeaseBudgets.AnyAsync(x => x.PropertyId == existing.PropertyId && x.BudgetId
+                     != existing.BudgetId && x.BudgetType == existing.BudgetType && x.FinalVersion == true);
+
+                    if(alreadyExists)
+                    {
+                        throw new Exception("Another final version already exists for this budget");
+                    }
+                }
+
+                existing.FinalVersion = budget.FinalVersion;
+                existing.IsApproved = budget.IsApproved;
+                existing.IsCompleted = budget.IsCompleted;
+                existing.Status = budget.Status;
+                existing.UpdatedAt = budget.UpdatedAt;
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 
 
