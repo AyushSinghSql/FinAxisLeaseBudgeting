@@ -41,6 +41,43 @@ namespace PlanningAPI.Controllers
             return Ok(result);
         }
 
+
+        [HttpGet("Dropdown-By-User/{userId}")]
+        public async Task<ActionResult> GetEntityDropdown(
+    int userId,
+    string? searchTerm = null)
+        {
+            var query =
+                from ups in _context.UserPropertySecurities.AsNoTracking()
+                join p in _context.PropertyMasters.AsNoTracking()
+                    on ups.PropertyId equals p.PropertyId
+                join e in _context.EntityMasters.AsNoTracking()
+                    on p.EntityId equals e.EntityId
+                where ups.UserId == userId
+                      && ups.IsActive
+                select e;
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var search = searchTerm.Trim().ToLower();
+
+                query = query.Where(x =>
+                    x.EntityId.ToLower().Contains(search) ||
+                    x.EntityName.ToLower().Contains(search));
+            }
+
+            var result = await query
+                .Select(x => new
+                {
+                    Id = x.EntityId,
+                    Name = x.EntityName
+                })
+                .Distinct()
+                .OrderBy(x => x.Name)
+                .ToListAsync();
+
+            return Ok(result);
+        }
         // GET: api/EntityMaster/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<EntityMaster>> Get(string id)
