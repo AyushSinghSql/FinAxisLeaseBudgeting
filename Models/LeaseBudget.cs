@@ -122,6 +122,14 @@ namespace FinAxisLeaseBudgeting.Models
         [Column("generated_by")]
         public string? GeneratedBy { get; set; }
 
+        [Column("final_version")]
+        public bool? FinalVersion { get; set; }
+        [Column("is_completed")]
+        public bool? IsCompleted { get; set; }
+        [Column("is_approved")]
+        public bool? IsApproved { get; set; }
+
+
         [Column("status")]
         public string? Status { get; set; }
 
