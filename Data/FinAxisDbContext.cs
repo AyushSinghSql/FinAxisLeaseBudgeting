@@ -47,6 +47,7 @@ namespace FinAxisLeaseBudgeting.Data
         public virtual DbSet<ChargeCdGlAccount> ChargeCdGlAccounts { get; set; }
         public DbSet<ChatHistoryMessage> ChatHistories { get; set; }
         public virtual DbSet<Account> Accounts { get; set; }
+        public DbSet<UserPropertySecurity> UserPropertySecurities { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

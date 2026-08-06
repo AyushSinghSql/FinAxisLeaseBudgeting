@@ -434,6 +434,10 @@ try
     builder.Services.AddScoped<IAiRepository, AiRepository>();
     builder.Services.AddScoped<IAiService, AiService>();
 
+
+    builder.Services.AddScoped<IUserPropertySecurityRepository, UserPropertySecurityRepository>();
+    builder.Services.AddScoped<UserPropertySecurityService, UserPropertySecurityService>();
+
     // OpenAPI Specification Config
     builder.Services.AddOpenApi(options =>
     {
