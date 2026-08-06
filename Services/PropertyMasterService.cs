@@ -9,6 +9,7 @@ namespace FinAxisLeaseBudgeting.Services
     {
         Task<PagedResponse<PropertyMaster>> GetPropertiesAsync(string? searchTerm, int pageNumber, int pageSize);
         Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownAsync(string? searchTerm);
+        Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownByUserAsync(int userId, string? searchTerm = null);
         Task<PagedResponse<PropertyBudgetDetailDto>> GetPropertyBudgetDetailsAsync(string? searchTerm, int pageNumber, int pageSize);
     }
 
@@ -29,6 +30,11 @@ namespace FinAxisLeaseBudgeting.Services
         public async Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownAsync(string? searchTerm)
         {
             return await _propertyRepository.GetPropertyDropdownAsync(searchTerm);
+        }
+
+        public async Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownByUserAsync(int userId, string? searchTerm = null)
+        {
+            return await _propertyRepository.GetPropertyDropdownByUserAsync(userId, searchTerm);
         }
 
         public async Task<PagedResponse<PropertyBudgetDetailDto>> GetPropertyBudgetDetailsAsync(string? searchTerm, int pageNumber, int pageSize)

@@ -1562,7 +1562,7 @@ BulkUpdateLeaseRevenueRequest request)
                 StartDate = startDate ?? DateOnly.MinValue,
                 EndDate = endDate ?? DateOnly.MaxValue,
 
-                Status = "Draft",
+                Status = "InProgress",
 
                 TotalBudget = response.TotalRevenue,
 

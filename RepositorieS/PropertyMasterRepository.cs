@@ -75,7 +75,7 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 var search = searchTerm.Trim().ToLower();
-                query = query.Where(p =>p.EntityId.ToLower() == search);
+                query = query.Where(p => p.EntityId.ToLower() == search);
             }
 
             return await query
@@ -86,6 +86,40 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                     PropertyCode = p.PropertyCode,
                     PropertyName = p.PropertyName
                 })
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownByUserAsync(
+      int userId,
+      string? searchTerm = null)
+        {
+            var query =
+                from ups in _context.UserPropertySecurities.AsNoTracking()
+                join p in _context.PropertyMasters.AsNoTracking()
+                    on ups.PropertyId equals p.PropertyId
+                where ups.UserId == userId
+                      && ups.IsActive
+                select p;
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var search = searchTerm.Trim().ToLower();
+
+                query = query.Where(p =>
+                    p.PropertyId.ToLower().Contains(search) ||
+                    p.PropertyCode.ToLower().Contains(search) ||
+                    p.PropertyName.ToLower().Contains(search));
+            }
+
+            return await query
+                .OrderBy(p => p.PropertyCode)
+                .Select(p => new PropertyDropdownDto
+                {
+                    PropertyId = p.PropertyId,
+                    PropertyCode = p.PropertyCode,
+                    PropertyName = p.PropertyName
+                })
+                .Distinct()
                 .ToListAsync();
         }
 
