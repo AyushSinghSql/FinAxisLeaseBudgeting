@@ -409,6 +409,8 @@ try
     builder.Services.AddScoped<ICommCustomerRepository, CommCustomerRepository>();
     builder.Services.AddScoped<ICommLeaseUnitRepository, CommLeaseUnitRepository>();
 
+    builder.Services.AddScoped<IBudgetLookupRepository, BudgetLookupRepository>();
+
     // Unit Master Interface
     builder.Services.AddScoped<IUnitRepository, UnitMasterRepository>();
 
@@ -437,6 +439,8 @@ try
 
     builder.Services.AddScoped<IUserPropertySecurityRepository, UserPropertySecurityRepository>();
     builder.Services.AddScoped<UserPropertySecurityService, UserPropertySecurityService>();
+
+    AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
     // OpenAPI Specification Config
     builder.Services.AddOpenApi(options =>

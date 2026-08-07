@@ -106,10 +106,10 @@ namespace FinAxisLeaseBudgeting.Models
         [Column("assumption_type")]
         public string AssumptionType { get; set; } = string.Empty;
 
-        [Required]
+        //[Required]
         [StringLength(30)]
         [Column("calculation_method")]
-        public string CalculationMethod { get; set; } = string.Empty;
+        public string CalculationMethod { get; set; } 
 
         [Column("assumption_value", TypeName = "numeric(18,4)")]
         public decimal? AssumptionValue { get; set; }
@@ -144,6 +144,12 @@ namespace FinAxisLeaseBudgeting.Models
         // Navigation Property
         [ForeignKey(nameof(AssumptionId))]
         public virtual PlBudgetAssumption? BudgetAssumption { get; set; }
+    }
+
+    public class LookupItemDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
     }
 
 }

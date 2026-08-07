@@ -372,7 +372,7 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                     await _budgetAssumptionRepository.GetAsync(
                         null,                  // Entity
                         lease.PropertyId,
-                        null,                  // Building
+                        //null,                  // Building
                         lease.UnitId,
                         lease.LeaseId);
 
@@ -576,7 +576,7 @@ GenerateLeaseBudgetRequest request)
                 await _budgetAssumptionRepository.GetAsync(
                     null,
                     request.PropertyId,
-                    null,
+                    //null,
                     request.UnitId,
                     leases.FirstOrDefault()?.LeaseId);
 
@@ -799,7 +799,7 @@ GenerateLeaseBudgetRequest request)
                 await _budgetAssumptionRepository.GetAsync(
                     null,
                     request.PropertyId,
-                    null,
+                    //null,
                     request.UnitId,
                     leases.FirstOrDefault()?.LeaseId);
 
