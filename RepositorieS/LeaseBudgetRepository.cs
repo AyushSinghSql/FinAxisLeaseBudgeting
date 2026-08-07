@@ -506,7 +506,7 @@ GenerateLeaseBudgetRequest request)
             //==============================================================
             // Load all leases overlapping the budget period
             //==============================================================
-
+            List<LeaseMaster> templeases = new List<LeaseMaster>();
 
 
             var leases = await _context.LeaseMasters
@@ -522,7 +522,7 @@ GenerateLeaseBudgetRequest request)
             // No Lease -> Use Market Rent
             //==============================================================
 
-            if (!leases.Any())
+            //if (!leases.Any())
             {
                 var unit = await _context.UnitMasters
                     .FirstOrDefaultAsync(x =>
@@ -531,7 +531,7 @@ GenerateLeaseBudgetRequest request)
 
                 if (unit != null)
                 {
-                    leases.Add(new LeaseMaster
+                    templeases.Add(new LeaseMaster
                     {
                         LeaseId = "MARKET",
                         PropertyId = request.PropertyId,
@@ -635,7 +635,7 @@ GenerateLeaseBudgetRequest request)
                                 // Lease expired
                                 revenue = CalculatePostLeaseRevenue(
                                     request,
-                                    lease,
+                                    templeases.FirstOrDefault(),
                                     assumptions,
                                     currentMonth);
                             }
@@ -1140,8 +1140,18 @@ DateOnly budgetMonth)
         {
             var result = new LeaseRevenueResult();
 
+            //decimal marketRent =
+            //    lease.ContractRent ?? 0;
+            //-------------------------------------
+            // Base Rent
+            //-------------------------------------
+
+            var months = GetInclusiveMonthDifference(lease.LeaseStartDate.Value, lease.LeaseEndDate.Value);
+
             decimal marketRent =
-                lease.ContractRent ?? 0;
+                lease.ContractRent.HasValue && months > 0
+                ? lease.ContractRent.Value / months
+                : 0;
 
             //==========================================
             // Renewal Probability
@@ -1739,17 +1749,17 @@ BulkUpdateLeaseRevenueRequest request)
             {
                 var existing = await _context.PlLeaseBudgets.FindAsync(budget.BudgetId);
 
-                if(existing == null)
+                if (existing == null)
                 {
                     return false;
                 }
 
-                if(budget.FinalVersion == true)
+                if (budget.FinalVersion == true)
                 {
                     bool alreadyExists = await _context.PlLeaseBudgets.AnyAsync(x => x.PropertyId == existing.PropertyId && x.BudgetId
                      != existing.BudgetId && x.BudgetType == existing.BudgetType && x.FinalVersion == true);
 
-                    if(alreadyExists)
+                    if (alreadyExists)
                     {
                         throw new Exception("Another final version already exists for this budget");
                     }
