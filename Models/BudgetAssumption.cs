@@ -3,6 +3,25 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinAxisLeaseBudgeting.Models
 {
+
+    [Table("assumption_types")]
+    public class AssumptionType
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("id")]
+        public int Id { get; set; }
+
+        [Required]
+        [Column("assumption_type")]
+        public string TypeName { get; set; }
+
+        [Column("category")]
+        public string? Category { get; set; }
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
     public class BudgetAssumptionModel
     {
         public decimal BaseRentEscalation { get; set; }
