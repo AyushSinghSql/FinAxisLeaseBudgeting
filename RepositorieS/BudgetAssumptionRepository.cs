@@ -308,13 +308,11 @@ namespace FinAxisLeaseBudgeting.Repositories
             return model;
         }
 
-        public async Task<List<PlBudgetAssumption>> GetByExactScopeAsync(string? entityId, string? propertyId, string? unitId, string? leaseId)
+        public async Task<PlBudgetAssumption?> GetByExactScopeAsync(string? entityId, string? propertyId, string? unitId, string? leaseId)
         {
             return await _context.PlBudgetAssumptions
-                .AsNoTracking()
                 .Include(x => x.AssumptionDetails)
-                .Where(x => x.EntityId == entityId && x.PropertyId == propertyId && x.UnitId == unitId && x.LeaseId == leaseId)
-                .ToListAsync();
+                .FirstOrDefaultAsync(x => x.EntityId == entityId && x.PropertyId == propertyId && x.UnitId == unitId && x.LeaseId == leaseId);
         }
 
         public async Task<PlBudgetAssumption?> GetByIdAsync(long assumptionId)
