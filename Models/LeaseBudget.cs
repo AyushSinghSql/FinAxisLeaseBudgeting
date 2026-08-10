@@ -75,6 +75,7 @@ namespace FinAxisLeaseBudgeting.Models
         public string BudgetType { get; set; }
 
         public int BudgetYear { get; set; }
+        public int AssumptionId { get; set; }
 
         public string UnitId { get; set; }
 

@@ -107,6 +107,22 @@ namespace FinAxisLeaseBudgeting.Controllers
             if (result == null) return NotFound(new { message = "No budget assumptions found." });
             return Ok(result);
         }
+        [HttpGet("{assumptionId:long}")]
+        public async Task<IActionResult> GetById(long assumptionId)
+        {
+            var result = await _repository.GetByIdAsync(assumptionId);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = $"Budget assumption with ID {assumptionId} was not found."
+                });
+            }
+
+            return Ok(result);
+        }
 
         [HttpPost("create")]
         public async Task<IActionResult> CreateAssumptions(

@@ -572,13 +572,15 @@ GenerateLeaseBudgetRequest request)
             // Load Assumptions
             //==========================================================
 
-            var assumptions =
-                await _budgetAssumptionRepository.GetAsync(
-                    null,
-                    request.PropertyId,
-                    //null,
-                    request.UnitId,
-                    leases.FirstOrDefault()?.LeaseId);
+            //var assumptions =
+            //    await _budgetAssumptionRepository.GetAsync(
+            //        null,
+            //        request.PropertyId,
+            //        //null,
+            //        request.UnitId,
+            //        leases.FirstOrDefault()?.LeaseId);
+
+            var assumptions = await _budgetAssumptionRepository.GetByIdAsync(request.AssumptionId);
 
             if (request.BudgetType.ToLower() == "revenue")
             {

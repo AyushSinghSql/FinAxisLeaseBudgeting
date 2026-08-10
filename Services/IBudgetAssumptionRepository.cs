@@ -6,7 +6,7 @@ namespace FinAxisLeaseBudgeting.Interfaces
     {
         Task<BudgetAssumptionModel> GetAsync(string? entityId, string? propertyId, string? unitId, string? leaseId);
         Task<PlBudgetAssumption?> GetByExactScopeAsync(string? entityId, string? propertyId, string? unitId, string? leaseId);
-        Task<PlBudgetAssumption?> GetByIdAsync(long assumptionId);
+        Task<BudgetAssumptionModel?> GetByIdAsync(long assumptionId);
         Task AddAsync(PlBudgetAssumption assumption);
         Task UpdateAsync(PlBudgetAssumption assumption);
         Task SaveChangesAsync();

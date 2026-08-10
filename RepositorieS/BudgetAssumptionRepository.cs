@@ -313,13 +313,26 @@ namespace FinAxisLeaseBudgeting.Repositories
             return await _context.PlBudgetAssumptions
                 .Include(x => x.AssumptionDetails)
                 .FirstOrDefaultAsync(x => x.EntityId == entityId && x.PropertyId == propertyId && x.UnitId == unitId && x.LeaseId == leaseId);
+
         }
 
-        public async Task<PlBudgetAssumption?> GetByIdAsync(long assumptionId)
+        public async Task<BudgetAssumptionModel?> GetByIdAsync(long assumptionId)
         {
-            return await _context.PlBudgetAssumptions
+            var assumption = await _context.PlBudgetAssumptions
                 .Include(x => x.AssumptionDetails)
                 .FirstOrDefaultAsync(x => x.AssumptionId == assumptionId);
+
+            if (assumption == null)
+                return null;
+
+            var model = new BudgetAssumptionModel();
+
+            // Apply assumption details
+            await ApplyLevel(
+                model,
+                assumption.AssumptionDetails?.ToList() ?? new List<PlBudgetAssumptionDetail>());
+
+            return model;
         }
 
         public async Task AddAsync(PlBudgetAssumption assumption) => await _context.PlBudgetAssumptions.AddAsync(assumption);
@@ -408,6 +421,7 @@ namespace FinAxisLeaseBudgeting.Repositories
 
             await SaveChangesAsync();
         }
+
     }
 
     public class BudgetLookupRepository : IBudgetLookupRepository
