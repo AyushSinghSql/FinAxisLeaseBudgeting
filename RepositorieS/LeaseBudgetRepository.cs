@@ -12,7 +12,7 @@ namespace FinAxisLeaseBudgeting.RepositorieS
     {
         private readonly FinAxisDbContext _context;
         private readonly IBudgetAssumptionRepository _budgetAssumptionRepository;
-
+        private const string NoLeaseId = "NO_LEASE";
         public LeaseBudgetRepository(FinAxisDbContext context, IBudgetAssumptionRepository budgetAssumptionRepository)
         {
             _context = context;
@@ -697,11 +697,39 @@ GenerateLeaseBudgetRequest request)
                 // Save Budget
                 //==============================================================
             }
+
+
+            //await SaveLeaseBudgetAsyncV1(
+            //    response,
+            //    request.PropertyId,
+            //    request.UnitId,
+            //    leases.First().LeaseId,
+            //    1,
+            //    request.BudgetStartDate,
+            //    request.BudgetEndDate,
+            //    request.BudgetType,
+            //    "");
+
+            string leaseId;
+
+            if (string.Equals(
+                    request.BudgetType,
+                    "Expense",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                leaseId = NoLeaseId;
+            }
+            else
+            {
+                var lease = leases.FirstOrDefault();
+                leaseId = lease?.LeaseId;
+            }
+
             await SaveLeaseBudgetAsyncV1(
                 response,
                 request.PropertyId,
                 request.UnitId,
-                leases.First().LeaseId,
+                leaseId,
                 1,
                 request.BudgetStartDate,
                 request.BudgetEndDate,
