@@ -1,87 +1,8 @@
-﻿//using FinAxisLeaseBudgeting.Interfaces;
-//using FinAxisLeaseBudgeting.Models;
-//using Microsoft.AspNetCore.Mvc;
-
-//namespace FinAxisLeaseBudgeting.Controllers
-//{
-//    [ApiController]
-//    [Route("api/[controller]")]
-//    public class BudgetAssumptionController : ControllerBase
-//    {
-//        private readonly IBudgetAssumptionRepository _repository;
-
-//        public BudgetAssumptionController(
-//            IBudgetAssumptionRepository repository
-//            )
-//        {
-//            _repository = repository;
-//        }
-
-//        // GET: api/budgetassumption/load?entityId=ENTITY001&propertyId=PROPERTY100
-//        [HttpGet("load")]
-//        public async Task<ActionResult<BudgetAssumptionModel>> LoadAssumptions(
-//            [FromQuery] string? entityId,
-//            [FromQuery] string? propertyId,
-//            [FromQuery] string? buildingId,
-//            [FromQuery] string? unitId,
-//            [FromQuery] string? leaseId)
-//        {
-//            var result = await _repository.GetAsync(entityId, propertyId, buildingId, unitId, leaseId);
-
-//            if (result == null)
-//            {
-//                return NotFound(new { message = "No budget assumptions found for the specified scope hierarchy." });
-//            }
-
-//            return Ok(result);
-//        }
-
-//        [HttpPost("create")]
-//        public async Task<IActionResult> CreateAssumptions(
-//            [FromQuery] string? entityId,
-//            [FromQuery] string? propertyId,
-//            [FromQuery] string? buildingId,
-//            [FromQuery] string? unitId,
-//            [FromQuery] string? leaseId,
-//            [FromBody] PlBudgetAssumption modelData)
-//        {
-//            if (modelData == null)
-//            {
-//                return BadRequest("Invalid assumption payload data.");
-//            }
-
-//            string userId = User.Identity?.Name ?? "SYSTEM";
-//            await _repository.SaveOrUpdateAssumptionsAsync(entityId, propertyId, buildingId, unitId, leaseId, modelData, userId);
-
-//            return Ok(new { success = true, message = "Assumptions created successfully." });
-//        }
-
-//        [HttpPut("update")]
-//        public async Task<IActionResult> UpdateAssumptions(
-//            [FromQuery] string? entityId,
-//            [FromQuery] string? propertyId,
-//            [FromQuery] string? buildingId,
-//            [FromQuery] string? unitId,
-//            [FromQuery] string? leaseId,
-//            [FromBody] PlBudgetAssumption modelData)
-//        {
-//            if (modelData == null)
-//            {
-//                return BadRequest("Invalid assumption payload data.");
-//            }
-
-//            string userId = User.Identity?.Name ?? "SYSTEM";
-//            await _repository.SaveOrUpdateAssumptionsAsync(entityId, propertyId, buildingId, unitId, leaseId, modelData, userId);
-
-//            return Ok(new { success = true, message = "Assumptions updated successfully." });
-//        }
-//    }
-//}
-
-
+﻿using FinAxisLeaseBudgeting.Data;
 using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinAxisLeaseBudgeting.Controllers
 {
@@ -90,10 +11,12 @@ namespace FinAxisLeaseBudgeting.Controllers
     public class BudgetAssumptionController : ControllerBase
     {
         private readonly IBudgetAssumptionRepository _repository;
+        private readonly FinAxisDbContext _context;
 
-        public BudgetAssumptionController(IBudgetAssumptionRepository repository)
+        public BudgetAssumptionController(IBudgetAssumptionRepository repository, FinAxisDbContext context)
         {
             _repository = repository;
+            _context = context;
         }
 
         [HttpGet("load")]
@@ -164,6 +87,41 @@ namespace FinAxisLeaseBudgeting.Controllers
             await _repository.SaveOrUpdateAssumptionsAsync(entityId, propertyId, unitId, leaseId, modelData, userId);
             return Ok(new { success = true, message = "Assumptions updated successfully." });
         }
+
+        [HttpGet("budget_assuption")]
+        public async Task<IActionResult> GetBudgetAssumption(
+    [FromQuery] string? entityId,
+    [FromQuery] string? propertyId,
+    [FromQuery] string? unitId,
+    [FromQuery] string? leaseId)
+        {
+            var query = _context.PlBudgetAssumptions.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(entityId))
+            {
+                query = query.Where(x => x.EntityId == entityId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(propertyId))
+            {
+                query = query.Where(x => x.PropertyId == propertyId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(unitId))
+            {
+                query = query.Where(x => x.UnitId == unitId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(leaseId))
+            {
+                query = query.Where(x => x.LeaseId == leaseId);
+            }
+
+            var result = await query.ToListAsync();
+
+            return Ok(result);
+        }
+
     }
 
     [ApiController]
