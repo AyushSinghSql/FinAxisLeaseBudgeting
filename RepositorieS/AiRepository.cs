@@ -82,7 +82,7 @@ namespace FinAxisLeaseBudgeting.Repositories
             int pageSize = 10)
         {
             IQueryable<UnitMaster> query = _context.UnitMasters.AsNoTracking()
-                .Where(u => u.UnitStatus != null && EF.Functions.Like(u.UnitStatus, "vacant"));
+                .Where(u => u.UnitStatus != null && EF.Functions.Like(u.UnitStatus.ToLower(), "vacant"));
 
             if (!string.IsNullOrWhiteSpace(propertyId))
             {
