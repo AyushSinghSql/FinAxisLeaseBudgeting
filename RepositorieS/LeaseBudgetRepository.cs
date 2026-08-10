@@ -181,6 +181,66 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
             //return result;
         }
+
+
+        public async Task<List<LeaseBudgetChargeGroupDto>> SearchAsyncV2()
+        {
+
+            List<LeaseBudgetChargeGroupDto> result = new List<LeaseBudgetChargeGroupDto>();
+            List<LeaseBudgetDetailDto> detailResults = new List<LeaseBudgetDetailDto>();
+            var budgets = await _context.PlLeaseBudgets
+                .Include(x => x.Details)
+                .ToListAsync();
+
+            //var leases = await _context.LeaseMasters
+            //    .ToDictionaryAsync(x => x.PropertyId + "|" + x.UnitId, x => x.TenantCode);
+
+            foreach (var budget in budgets)
+            {
+                detailResults.AddRange(budget.Details.Select(d => new LeaseBudgetDetailDto
+                {
+                    DetailId = d.DetailId,
+                    BudgetMonth = d.BudgetMonth,
+                    BudgetYear = d.BudgetYear,
+                    BaseRent = d.BaseRent,
+                    AccountId = d.AccountId,
+                    ChargeCode = d.ChargeCode,
+                }));
+            }
+
+            var groupNyResult = detailResults.GroupBy(x => new { x.BudgetYear, x.BudgetMonth, x.ChargeCode, x.AccountId })
+                .Select(g => new LeaseBudgetDetailDto
+                {
+                    BudgetYear = g.Key.BudgetYear,
+                    BudgetMonth = g.Key.BudgetMonth,
+                    ChargeCode = g.Key.ChargeCode,
+                    AccountId = g.Key.AccountId,
+                    BaseRent = g.Sum(x => x.BaseRent)
+                })
+                .ToList();
+
+
+            result = groupNyResult.GroupBy(x => new { x.ChargeCode, x.AccountId })
+            .Select(g => new LeaseBudgetChargeGroupDto
+            {
+                ChargeCode = g.Key.ChargeCode,
+                AccountId = g.Key.AccountId,
+                Details = g.OrderBy(x => x.BudgetYear)
+                           .ThenBy(x => x.BudgetMonth)
+                           .Select(d => new LeaseBudgetDetailDto
+                           {
+                               DetailId = d.DetailId,
+                               BudgetMonth = d.BudgetMonth,
+                               BudgetYear = d.BudgetYear,
+                               BaseRent = d.BaseRent
+                           })
+                           .ToList()
+            })
+            .ToList();
+
+
+            return result;
+        }
         public async Task<List<PlLeaseBudget>> SearchAsync_Working(LeaseBudgetSearchRequest request)
         {
             var query = _context.PlLeaseBudgets

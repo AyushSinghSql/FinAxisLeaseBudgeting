@@ -341,8 +341,8 @@ namespace FinAxisLeaseBudgeting.Models
         //public int OccupiedDays { get; set; }
         //public int DaysInMonth { get; set; }
         //public decimal ProrationFactor { get; set; }
-        //public string? ChargeCode { get; set; }
-        //public string? AccountId { get; set; }
+        public string? ChargeCode { get; set; }
+        public string? AccountId { get; set; }
     }
 
 

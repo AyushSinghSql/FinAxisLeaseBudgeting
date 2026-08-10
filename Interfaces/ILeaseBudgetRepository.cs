@@ -23,6 +23,7 @@ string generatedBy);
 
         Task<List<PlLeaseBudget>> SearchAsync(LeaseBudgetSearchRequest request);
         Task<List<LeaseBudgetDto>> SearchAsyncV1(LeaseBudgetSearchRequest request);
+        Task<List<LeaseBudgetChargeGroupDto>> SearchAsyncV2();
         Task<List<PlLeaseBudget>> GetBudgetsAsync(LeaseBudgetSearchRequest request);
 
         Task BulkUpdateRevenueAsync(BulkUpdateLeaseRevenueRequest request);

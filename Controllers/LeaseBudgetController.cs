@@ -48,6 +48,14 @@ namespace FinAxisLeaseBudgeting.Controllers
             return Ok(result);
         }
 
+        [HttpPost("SearchV2")]
+        public async Task<IActionResult> SearchV2()
+        {
+            var result = await _service.SearchAsyncV2();
+
+            return Ok(result);
+        }
+
         [HttpPost("BulkUpdateRevenue")]
         public async Task<IActionResult> BulkUpdateRevenue(
     BulkUpdateLeaseRevenueRequest request)
