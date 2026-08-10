@@ -48,6 +48,8 @@ namespace FinAxisLeaseBudgeting.Data
         public DbSet<ChatHistoryMessage> ChatHistories { get; set; }
         public virtual DbSet<Account> Accounts { get; set; }
         public DbSet<UserPropertySecurity> UserPropertySecurities { get; set; }
+
+        public DbSet<AssumptionType> AssumptionTypes { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
