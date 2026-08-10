@@ -327,7 +327,7 @@ try
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
     builder.Services.AddDbContext<FinAxisDbContext>(options =>
-        options.UseNpgsql(connectionString));
+        options.UseNpgsql(connectionString), ServiceLifetime.Scoped);
 
     builder.Services.AddHttpClient();
 
