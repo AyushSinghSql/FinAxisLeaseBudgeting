@@ -49,6 +49,7 @@ namespace FinAxisLeaseBudgeting.Controllers
 
         [HttpPost("create")]
         public async Task<IActionResult> CreateAssumptions(
+            [FromQuery] string? assumptionId,
             [FromQuery] string? entityId,
             [FromQuery] string? propertyId,
             [FromQuery] string? unitId,
@@ -57,18 +58,19 @@ namespace FinAxisLeaseBudgeting.Controllers
         {
             if (modelData == null) return BadRequest("Invalid payload.");
             string userId = User.Identity?.Name ?? "SYSTEM";
-            await _repository.SaveOrUpdateAssumptionsAsync(entityId, propertyId, unitId, leaseId, modelData, userId);
+            await _repository.SaveOrUpdateAssumptionsAsync(assumptionId, entityId, propertyId, unitId, leaseId, modelData, userId);
             return Ok(new { success = true, message = "Assumptions created successfully." });
         }
 
         [HttpGet("scope")]
         public async Task<ActionResult<PlBudgetAssumption>> GetByExactScope(
+    [FromQuery] string? assumptionId,
     [FromQuery] string? entityId,
     [FromQuery] string? propertyId,
     [FromQuery] string? unitId,
     [FromQuery] string? leaseId)
         {
-            var result = await _repository.GetByExactScopeAsync(entityId, propertyId, unitId, leaseId);
+            var result = await _repository.GetByExactScopeAsync(assumptionId, entityId, propertyId, unitId, leaseId);
             if (result == null)
                 return NotFound(new { message = "No budget assumption found at this scope." });
             return Ok(result);
@@ -76,6 +78,7 @@ namespace FinAxisLeaseBudgeting.Controllers
 
         [HttpPut("update")]
         public async Task<IActionResult> UpdateAssumptions(
+            [FromQuery] string? assumptionId,
             [FromQuery] string? entityId,
             [FromQuery] string? propertyId,
             [FromQuery] string? unitId,
@@ -84,7 +87,7 @@ namespace FinAxisLeaseBudgeting.Controllers
         {
             if (modelData == null) return BadRequest("Invalid payload.");
             string userId = User.Identity?.Name ?? "SYSTEM";
-            await _repository.SaveOrUpdateAssumptionsAsync(entityId, propertyId, unitId, leaseId, modelData, userId);
+            await _repository.SaveOrUpdateAssumptionsAsync(assumptionId, entityId, propertyId, unitId, leaseId, modelData, userId);
             return Ok(new { success = true, message = "Assumptions updated successfully." });
         }
 

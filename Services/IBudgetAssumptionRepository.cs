@@ -5,12 +5,12 @@ namespace FinAxisLeaseBudgeting.Interfaces
     public interface IBudgetAssumptionRepository
     {
         Task<BudgetAssumptionModel> GetAsync(string? entityId, string? propertyId, string? unitId, string? leaseId);
-        Task<PlBudgetAssumption?> GetByExactScopeAsync(string? entityId, string? propertyId, string? unitId, string? leaseId);
+        Task<IEnumerable<PlBudgetAssumption>> GetByExactScopeAsync(string? assumptionId, string? entityId, string? propertyId, string? unitId, string? leaseId);
         Task<BudgetAssumptionModel?> GetByIdAsync(long assumptionId);
         Task AddAsync(PlBudgetAssumption assumption);
         Task UpdateAsync(PlBudgetAssumption assumption);
         Task SaveChangesAsync();
-        Task SaveOrUpdateAssumptionsAsync(string? entityId, string? propertyId, string? unitId, string? leaseId, PlBudgetAssumption payload, string userId);
+        Task SaveOrUpdateAssumptionsAsync(string? assumptionId, string? entityId, string? propertyId, string? unitId, string? leaseId, PlBudgetAssumption payload, string userId);
     }
 
     public interface IBudgetLookupRepository
