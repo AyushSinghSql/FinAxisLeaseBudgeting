@@ -468,5 +468,24 @@ namespace FinAxisLeaseBudgeting.Repositories
                 .Distinct()
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<LookupItemDto>> GetAssumptionsAsync(long? assumptionId)
+        {
+            var query = _context.PlBudgetAssumptions.AsQueryable();
+
+            if (assumptionId.HasValue)
+            {
+                query = query.Where(x => x.AssumptionId == assumptionId.Value);
+            }
+
+            return await query
+                .Select(x => new LookupItemDto
+                {
+                    Id = x.AssumptionId.ToString(),
+                    Name = x.AssumptionName!
+                })
+                .Distinct()
+                .ToListAsync();
+        }
     }
 }

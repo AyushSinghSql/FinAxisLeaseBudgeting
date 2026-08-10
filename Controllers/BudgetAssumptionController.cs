@@ -200,5 +200,12 @@ namespace FinAxisLeaseBudgeting.Controllers
         {
             return Ok(await _lookupRepository.GetLeasesAsync(unitId));
         }
+
+
+        [HttpGet("assumptions")]
+        public async Task<ActionResult<IEnumerable<LookupItemDto>>> GetAssumptions([FromQuery] long? assumptionId)
+        {
+            return Ok(await _lookupRepository.GetAssumptionsAsync(assumptionId));
+        }
     }
 }

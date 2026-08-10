@@ -19,5 +19,8 @@ namespace FinAxisLeaseBudgeting.Interfaces
         Task<IEnumerable<LookupItemDto>> GetPropertiesAsync(string? entityId);
         Task<IEnumerable<LookupItemDto>> GetUnitsAsync(string? propertyId);
         Task<IEnumerable<LookupItemDto>> GetLeasesAsync(string? unitId);
+
+        Task<IEnumerable<LookupItemDto>> GetAssumptionsAsync(long? assumptionId);
     }
+
 }
