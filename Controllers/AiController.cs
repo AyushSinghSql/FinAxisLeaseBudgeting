@@ -1,4 +1,5 @@
 ﻿using FinAxisLeaseBudgeting.Interfaces;
+using FinAxisLeaseBudgeting.Models;
 using FinAxisLeaseBudgeting.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -77,6 +78,17 @@ namespace FinAxisLeaseBudgeting.Controllers
             var result = await _aiService.GetBudgetAssumptionsAsync(
                 entityId, propertyId, buildingId, unitId, leaseId, pageNumber, pageSize);
 
+            return Ok(result);
+        }
+
+        [HttpGet("master-data")]
+        public async Task<ActionResult<PagedResponse<object>>> GetMasterData(
+            [FromQuery] string masterType,
+            [FromQuery] string? searchFilter = null,
+            [FromQuery] int pageNumber = 0,
+            [FromQuery] int pageSize = 10)
+        {
+            var result = await _aiService.GetMasterDataAsync(masterType, searchFilter, pageNumber, pageSize);
             return Ok(result);
         }
     }

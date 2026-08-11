@@ -307,6 +307,109 @@ namespace FinAxisLeaseBudgeting.Repositories
             };
         }
 
+        public async Task<PagedResponse<object>> GetMasterDataAsync(
+            string masterType,
+            string? searchFilter = null,
+            int pageNumber = 0,
+            int pageSize = 10)
+        {
+            masterType = masterType?.ToLowerInvariant()?.Trim() ?? string.Empty;
+
+            switch (masterType)
+            {
+                case "entity":
+                case "entities":
+                case "entitymaster":
+                    {
+                        var query = _context.EntityMasters.AsNoTracking();
+                        if (!string.IsNullOrWhiteSpace(searchFilter))
+                        {
+                            query = query.Where(e => EF.Functions.Like(e.EntityId, $"%{searchFilter}%") ||
+                                                     (e.EntityName != null && EF.Functions.Like(e.EntityName, $"%{searchFilter}%")));
+                        }
+                        int totalRecords = await query.CountAsync();
+                        var projected = query.OrderBy(e => e.EntityId).Cast<object>();
+                        var (data, calculatedPageSize, totalPages) = await ExecutePaginationAsync(projected, totalRecords, pageNumber, pageSize);
+                        return new PagedResponse<object>
+                        {
+                            Data = data,
+                            TotalRecords = totalRecords,
+                            PageNumber = pageNumber <= 0 ? 0 : pageNumber,
+                            PageSize = calculatedPageSize,
+                            TotalPages = totalPages
+                        };
+                    }
+                case "property":
+                case "properties":
+                case "propertymaster":
+                    {
+                        var query = _context.PropertyMasters.AsNoTracking();
+                        if (!string.IsNullOrWhiteSpace(searchFilter))
+                        {
+                            query = query.Where(p => EF.Functions.Like(p.PropertyId, $"%{searchFilter}%") ||
+                                                     (p.PropertyName != null && EF.Functions.Like(p.PropertyName, $"%{searchFilter}%")));
+                        }
+                        int totalRecords = await query.CountAsync();
+                        var projected = query.OrderBy(p => p.PropertyId).Cast<object>();
+                        var (data, calculatedPageSize, totalPages) = await ExecutePaginationAsync(projected, totalRecords, pageNumber, pageSize);
+                        return new PagedResponse<object>
+                        {
+                            Data = data,
+                            TotalRecords = totalRecords,
+                            PageNumber = pageNumber <= 0 ? 0 : pageNumber,
+                            PageSize = calculatedPageSize,
+                            TotalPages = totalPages
+                        };
+                    }
+                case "unit":
+                case "units":
+                case "unitmaster":
+                    {
+                        var query = _context.UnitMasters.AsNoTracking();
+                        if (!string.IsNullOrWhiteSpace(searchFilter))
+                        {
+                            query = query.Where(u => EF.Functions.Like(u.UnitId, $"%{searchFilter}%") ||
+                                                     (u.UnitCode != null && EF.Functions.Like(u.UnitCode, $"%{searchFilter}%")));
+                        }
+                        int totalRecords = await query.CountAsync();
+                        var projected = query.OrderBy(u => u.UnitId).Cast<object>();
+                        var (data, calculatedPageSize, totalPages) = await ExecutePaginationAsync(projected, totalRecords, pageNumber, pageSize);
+                        return new PagedResponse<object>
+                        {
+                            Data = data,
+                            TotalRecords = totalRecords,
+                            PageNumber = pageNumber <= 0 ? 0 : pageNumber,
+                            PageSize = calculatedPageSize,
+                            TotalPages = totalPages
+                        };
+                    }
+                case "lease":
+                case "leases":
+                case "leasemaster":
+                    {
+                        var query = _context.LeaseMasters.AsNoTracking();
+                        if (!string.IsNullOrWhiteSpace(searchFilter))
+                        {
+                            query = query.Where(l => EF.Functions.Like(l.LeaseId, $"%{searchFilter}%") ||
+                                                     (l.TenantName != null && EF.Functions.Like(l.TenantName, $"%{searchFilter}%")));
+                        }
+                        int totalRecords = await query.CountAsync();
+                        var projected = query.OrderBy(l => l.LeaseId).Cast<object>();
+                        var (data, calculatedPageSize, totalPages) = await ExecutePaginationAsync(projected, totalRecords, pageNumber, pageSize);
+                        return new PagedResponse<object>
+                        {
+                            Data = data,
+                            TotalRecords = totalRecords,
+                            PageNumber = pageNumber <= 0 ? 0 : pageNumber,
+                            PageSize = calculatedPageSize,
+                            TotalPages = totalPages
+                        };
+                    }
+                default:
+                    throw new ArgumentException($"Unsupported master type requested: '{masterType}'. Supported types are 'entity', 'property', 'unit', and 'lease'.");
+            }
+        }
+
         private static async Task<(List<T> Data, int PageSize, int TotalPages)> ExecutePaginationAsync<T>(
             IQueryable<T> projectedQuery,
             int totalRecords,

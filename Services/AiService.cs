@@ -39,6 +39,12 @@ namespace FinAxisLeaseBudgeting.Services
             string? leaseId = null,
             int pageNumber = 0,
             int pageSize = 10);
+
+        Task<PagedResponse<object>> GetMasterDataAsync(
+            string masterType,
+            string? searchFilter = null,
+            int pageNumber = 0,
+            int pageSize = 10);
     }
 
     public class AiService : IAiService
@@ -92,6 +98,15 @@ namespace FinAxisLeaseBudgeting.Services
         {
             return await _aiRepository.GetBudgetAssumptionsAsync(
                 entityId, propertyId, buildingId, unitId, leaseId, pageNumber, pageSize);
+        }
+
+        public async Task<PagedResponse<object>> GetMasterDataAsync(
+            string masterType,
+            string? searchFilter = null,
+            int pageNumber = 0,
+            int pageSize = 10)
+        {
+            return await _aiRepository.GetMasterDataAsync(masterType, searchFilter, pageNumber, pageSize);
         }
     }
 }

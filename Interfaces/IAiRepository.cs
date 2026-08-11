@@ -47,5 +47,11 @@ namespace FinAxisLeaseBudgeting.Interfaces
             string? leaseId,
             int pageNumber,
             int pageSize);
+
+        Task<PagedResponse<object>> GetMasterDataAsync(
+            string masterType,
+            string? searchFilter = null,
+            int pageNumber = 0,
+            int pageSize = 10);
     }
 }
