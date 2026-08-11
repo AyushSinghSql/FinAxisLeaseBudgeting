@@ -81,6 +81,14 @@ namespace FinAxisLeaseBudgeting.Controllers
                 return NotFound();
             }
 
+            var assumptionDetailExists = await _context.PlBudgetAssumptionDetails
+                .AnyAsync(x => x.AssumptionType == assumptionType.TypeName); 
+
+            if (assumptionDetailExists)
+            {
+                return BadRequest("Assumption detail with this type exists");
+            }
+
             _context.AssumptionTypes.Remove(assumptionType);
             await _context.SaveChangesAsync();
 
