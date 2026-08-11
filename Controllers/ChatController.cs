@@ -122,13 +122,16 @@
 //                ? Guid.NewGuid().ToString()
 //                : request.SessionId;
 
-//            string normalizedQueryTemplate = NormalizeQueryTemplate(request.Prompt);
-//            string queryHash = ComputeSha256Hash(normalizedQueryTemplate);
-
 //            try
 //            {
-//                // Retrieve user's mapped access boundaries from repository
+//                // 1. Retrieve user's mapped access boundaries first
 //                string allowedScopeSummary = await _securityRepository.GetUserAllowedScopeSummaryAsync(request.UserId);
+
+//                // 2. Build a scope-aware cache key to prevent cross-user data leakage 
+//                // (Users with different property mappings will never share cache entries)
+//                string normalizedQueryTemplate = NormalizeQueryTemplate(request.Prompt);
+//                string scopeAwareInput = $"{normalizedQueryTemplate}_scope:{allowedScopeSummary}";
+//                string queryHash = ComputeSha256Hash(scopeAwareInput);
 
 //                var cacheExpiryThreshold = DateTime.UtcNow.Subtract(CacheTtl);
 
@@ -142,13 +145,13 @@
 
 //                if (cachedRecord != null)
 //                {
-//                    _logger.LogInformation("Global Cross-Session Cache HIT for query pattern hash: {Hash}", queryHash);
+//                    _logger.LogInformation("Scope-Aware Cache HIT for query pattern hash: {Hash} and User ID: {UserId}", queryHash, request.UserId);
 //                    finalAiResponse = await ExecuteCachedDataPipelineAsync(request.Prompt, cachedRecord.AssistantResponse, allowedScopeSummary);
 //                    source = "global-cache";
 //                }
 //                else
 //                {
-//                    _logger.LogInformation("Global Cross-Session Cache MISS. Executing live MCP/LLM pipeline.");
+//                    _logger.LogInformation("Scope-Aware Cache MISS for User ID: {UserId}. Executing live MCP/LLM pipeline.", request.UserId);
 //                    finalAiResponse = await ExecuteLiveMcpPipelineAsync(sessionId, request.Prompt, request.UserId, allowedScopeSummary);
 //                    source = "live";
 
@@ -157,7 +160,7 @@
 //                        UserId = request.UserId,
 //                        SessionId = sessionId,
 //                        UserQuery = request.Prompt,
-//                        QueryHash = queryHash,
+//                        QueryHash = queryHash, // Stores the scope-bound hash
 //                        AssistantResponse = finalAiResponse,
 //                        CreatedAt = DateTime.UtcNow
 //                    };
@@ -287,7 +290,6 @@
 //    }
 //}
 
-
 using FinAxisLeaseBudgeting.Data;
 using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.Models;
@@ -412,16 +414,13 @@ namespace PlanningAPI.Controllers
                 ? Guid.NewGuid().ToString()
                 : request.SessionId;
 
+            string normalizedQueryTemplate = NormalizeQueryTemplate(request.Prompt);
+            string queryHash = ComputeSha256Hash(normalizedQueryTemplate);
+
             try
             {
-                // 1. Retrieve user's mapped access boundaries first
+                // Retrieve user's mapped access boundaries from repository
                 string allowedScopeSummary = await _securityRepository.GetUserAllowedScopeSummaryAsync(request.UserId);
-
-                // 2. Build a scope-aware cache key to prevent cross-user data leakage 
-                // (Users with different property mappings will never share cache entries)
-                string normalizedQueryTemplate = NormalizeQueryTemplate(request.Prompt);
-                string scopeAwareInput = $"{normalizedQueryTemplate}_scope:{allowedScopeSummary}";
-                string queryHash = ComputeSha256Hash(scopeAwareInput);
 
                 var cacheExpiryThreshold = DateTime.UtcNow.Subtract(CacheTtl);
 
@@ -435,13 +434,13 @@ namespace PlanningAPI.Controllers
 
                 if (cachedRecord != null)
                 {
-                    _logger.LogInformation("Scope-Aware Cache HIT for query pattern hash: {Hash} and User ID: {UserId}", queryHash, request.UserId);
+                    _logger.LogInformation("Global Cross-Session Cache HIT for query pattern hash: {Hash}", queryHash);
                     finalAiResponse = await ExecuteCachedDataPipelineAsync(request.Prompt, cachedRecord.AssistantResponse, allowedScopeSummary);
                     source = "global-cache";
                 }
                 else
                 {
-                    _logger.LogInformation("Scope-Aware Cache MISS for User ID: {UserId}. Executing live MCP/LLM pipeline.", request.UserId);
+                    _logger.LogInformation("Global Cross-Session Cache MISS. Executing live MCP/LLM pipeline.");
                     finalAiResponse = await ExecuteLiveMcpPipelineAsync(sessionId, request.Prompt, request.UserId, allowedScopeSummary);
                     source = "live";
 
@@ -450,7 +449,7 @@ namespace PlanningAPI.Controllers
                         UserId = request.UserId,
                         SessionId = sessionId,
                         UserQuery = request.Prompt,
-                        QueryHash = queryHash, // Stores the scope-bound hash
+                        QueryHash = queryHash,
                         AssistantResponse = finalAiResponse,
                         CreatedAt = DateTime.UtcNow
                     };
