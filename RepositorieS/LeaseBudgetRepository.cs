@@ -650,7 +650,7 @@ GenerateLeaseBudgetRequest request)
 
                 var revenue =
                     CalculateMonthlyLeaseRevenueV1(request,
-                        leases.FirstOrDefault(),
+                        leases.FirstOrDefault()??templeases.FirstOrDefault(),
                         assumptions,
                         currentMonth);
 

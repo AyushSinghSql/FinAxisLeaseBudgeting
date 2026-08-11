@@ -97,13 +97,13 @@ namespace FinAxisLeaseBudgeting.Models
         public long BudgetId { get; set; }
 
         [Column("property_id")]
-        public string PropertyId { get; set; }
+        public string? PropertyId { get; set; }
 
         [Column("unit_id")]
-        public string UnitId { get; set; }
+        public string? UnitId { get; set; }
 
         [Column("lease_id")]
-        public string LeaseId { get; set; }
+        public string? LeaseId { get; set; }
 
         [Column("budget_year")]
         public int BudgetYear { get; set; }
