@@ -171,31 +171,18 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             {
                 var propertyUnits = units.Where(u => u.PropertyId == p.PropertyId).ToList();
 
-                var rentableItemsList = propertyUnits.Select((u, index) => new RentableItemDto
-                {
-                    Id = index + 1,
-                    UnitId = u.UnitId,
-                    UnitCode = u.UnitCode,
-                    TypeCode = !string.IsNullOrWhiteSpace(u.UnitType) ? u.UnitType : "PARK",
-                    Desc = !string.IsNullOrWhiteSpace(u.Building) ? u.Building : u.UnitCode,
-                    MarketRent = u.MarketRent?.ToString("F2") ?? "150.00",
-                    OccTable = "OCC_STD",
-                    Items = "45",
-                    ChargeCode = "PRK_CHG",
-                    GlAccount = "4100-02",
-                    InfMethod = "Fixed %",
-                    InfTable = "INF_2026",
-                    InfRate = "3.5"
-                }).ToList();
+                var rentableItemsList = new List<RentableItemDto>();
 
-                if (!rentableItemsList.Any())
+                if (propertyUnits.Count > 0)
                 {
-                    rentableItemsList.Add(new RentableItemDto
+                    rentableItemsList = propertyUnits.Select((u, index) => new RentableItemDto
                     {
-                        Id = 1,
-                        TypeCode = "PARK",
-                        Desc = "Covered Parking Structure",
-                        MarketRent = "150.00",
+                        Id = index + 1,
+                        UnitId = u.UnitId,
+                        UnitCode = u.UnitCode,
+                        TypeCode = !string.IsNullOrWhiteSpace(u.UnitType) ? u.UnitType : "PARK",
+                        Desc = !string.IsNullOrWhiteSpace(u.Building) ? u.Building : u.UnitCode,
+                        MarketRent = u.MarketRent?.ToString("F2") ?? "150.00",
                         OccTable = "OCC_STD",
                         Items = "45",
                         ChargeCode = "PRK_CHG",
@@ -203,7 +190,27 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                         InfMethod = "Fixed %",
                         InfTable = "INF_2026",
                         InfRate = "3.5"
-                    });
+                    }).ToList();
+
+
+                    if (!rentableItemsList.Any())
+                    {
+                        rentableItemsList.Add(new RentableItemDto
+                        {
+                            Id = 1,
+                            TypeCode = "PARK",
+                            Desc = "Covered Parking Structure",
+                            MarketRent = "150.00",
+                            OccTable = "OCC_STD",
+                            Items = "45",
+                            ChargeCode = "PRK_CHG",
+                            GlAccount = "4100-02",
+                            InfMethod = "Fixed %",
+                            InfTable = "INF_2026",
+                            InfRate = "3.5"
+                        });
+                    }
+
                 }
 
                 return new PropertyBudgetDetailDto
