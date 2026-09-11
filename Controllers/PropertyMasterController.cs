@@ -45,10 +45,11 @@ namespace FinAxisLeaseBudgeting.Controllers
         [HttpGet("property-budget-details")]
         public async Task<IActionResult> GetPropertyBudgetDetails(
         [FromQuery] string? searchTerm = null,
+        [FromQuery] int? userId = null,
         [FromQuery] int pageNumber = 0,
         [FromQuery] int pageSize = 10)
         {
-            var result = await _propertyService.GetPropertyBudgetDetailsAsync(searchTerm, pageNumber, pageSize);
+            var result = await _propertyService.GetPropertyBudgetDetailsAsync(searchTerm, userId, pageNumber, pageSize);
             return Ok(result);
         }
     }

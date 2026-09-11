@@ -108,7 +108,8 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                 query = query.Where(p =>
                     p.PropertyId.ToLower().Contains(search) ||
                     p.PropertyCode.ToLower().Contains(search) ||
-                    p.PropertyName.ToLower().Contains(search));
+                    p.PropertyName.ToLower().Contains(search) ||
+                    p.EntityId.Contains(search));
             }
 
             return await query
@@ -123,9 +124,14 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                 .ToListAsync();
         }
 
-        public async Task<PagedResponse<PropertyBudgetDetailDto>> GetPropertyBudgetDetailsAsync(string? searchTerm = null, int pageNumber = 0, int pageSize = 10)
+        public async Task<PagedResponse<PropertyBudgetDetailDto>> GetPropertyBudgetDetailsAsync(string? searchTerm = null, int? userId = null, int pageNumber = 0, int pageSize = 10)
         {
             IQueryable<PropertyMaster> query = _context.PropertyMasters.AsNoTracking();
+
+            if (userId.HasValue)
+            {
+                query = from ups in _context.UserPropertySecurities.AsNoTracking() join p in _context.PropertyMasters.AsNoTracking() on ups.PropertyId equals p.PropertyId where ups.UserId == userId && ups.IsActive select p;
+            }
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {

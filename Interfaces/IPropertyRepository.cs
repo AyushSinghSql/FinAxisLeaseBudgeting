@@ -11,6 +11,6 @@ namespace FinAxisLeaseBudgeting.Interfaces
         Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownByUserAsync(int userId, string? searchTerm = null);
 
         // Updated method with pagination support
-        Task<PagedResponse<PropertyBudgetDetailDto>> GetPropertyBudgetDetailsAsync(string? searchTerm = null, int pageNumber = 0, int pageSize = 10);
+        Task<PagedResponse<PropertyBudgetDetailDto>> GetPropertyBudgetDetailsAsync(string? searchTerm = null, int? userId = null, int pageNumber = 0, int pageSize = 10);
     }
 }
