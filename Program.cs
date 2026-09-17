@@ -257,6 +257,7 @@ using FinAxisLeaseBudgeting.Models;
 using FinAxisLeaseBudgeting.Repositories;
 using FinAxisLeaseBudgeting.RepositorieS;
 using FinAxisLeaseBudgeting.Services;
+using FinAxisLeaseBudgeting.Tools;
 using GeminiDotnet;
 using GeminiDotnet.Extensions.AI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -435,6 +436,8 @@ try
     // Ai Interface
     builder.Services.AddScoped<IAiRepository, AiRepository>();
     builder.Services.AddScoped<IAiService, AiService>();
+
+    builder.Services.AddScoped<DirectAiTools>();
 
 
     builder.Services.AddScoped<IUserPropertySecurityRepository, UserPropertySecurityRepository>();
