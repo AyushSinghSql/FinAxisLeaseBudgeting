@@ -222,7 +222,7 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                 return new PropertyBudgetDetailDto
                 {
                     Property = p.PropertyId,
-                    ModelProperty = p.PropertyCode,
+                    //ModelProperty = p.PropertyCode,
                     PropertyCode = p.PropertyCode,
                     //Property = p.PropertyCode,
                     //ModelProperty = p.PropertyId,
