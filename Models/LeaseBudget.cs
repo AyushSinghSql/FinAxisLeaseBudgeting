@@ -392,6 +392,8 @@ namespace FinAxisLeaseBudgeting.Models
     {
         public string ChargeCode { get; set; }
         public string AccountId { get; set; }
+        public string? ChargeCodeDescription { get; set; }
+        public string? AccountName { get; set; }
         public List<LeaseBudgetDetailDto> Details { get; set; } = new();
     }
 

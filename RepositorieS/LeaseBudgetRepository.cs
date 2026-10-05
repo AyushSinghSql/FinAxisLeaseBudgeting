@@ -1849,6 +1849,24 @@ BulkUpdateLeaseRevenueRequest request)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.UnitId == budget.UnitId);
 
+
+            var chargeCodes = budget.Details
+                .Select(d => d.ChargeCode)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct()
+                .ToList();
+
+            var ChargeCodeDescription = await _context.ChargeCdGlAccounts
+                .Where(x => chargeCodes.Contains(x.ChargeCode))
+                .Select(x => new
+                {
+                    x.ChargeDescription,
+                    x.ChargeCode,
+                    x.GlAccount,
+                    x.GlAccountName
+                })
+                .ToListAsync();
+
             return new LeaseBudgetDto
             {
                 // =========================================
@@ -1888,7 +1906,8 @@ BulkUpdateLeaseRevenueRequest request)
                     {
                         ChargeCode = g.Key.ChargeCode,
                         AccountId = g.Key.AccountId,
-
+                        ChargeCodeDescription = ChargeCodeDescription.FirstOrDefault(x => x.ChargeCode == g.Key.ChargeCode)?.ChargeDescription,
+                        AccountName = ChargeCodeDescription.FirstOrDefault(x => x.ChargeCode == g.Key.ChargeCode)?.GlAccountName,  
                         Details = g
                             .OrderBy(x => x.BudgetYear)
                             .ThenBy(x => x.BudgetMonth)
