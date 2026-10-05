@@ -786,25 +786,24 @@ GenerateLeaseBudgetRequest request)
                        });
                     }
                 }
-                else
-                {
-                    ChargeCodes = await _context.ChargeCdGlAccounts.Where(p => leases != null && p.ChargeCode == leases.First().ChargeCode)
-                                .AsNoTracking()
-                                .Select(x => new ChargeAccountDto
-                                {
-                                    ChargeCode = x.ChargeCode,
-                                    ChargeDescription = x.ChargeDescription ?? string.Empty,
-                                    AccountId = x.GlAccount,
-                                    AccountName = x.GlAccountName ?? string.Empty,
-                                    RevenueType = x.RevenueType ?? string.Empty
-                                })
-                                .Distinct()
-                                .OrderBy(x => x.ChargeCode)
-                                .ThenBy(x => x.AccountId)
-                                .ToListAsync();
-                }
             }
-
+            else
+            {
+                ChargeCodes = await _context.ChargeCdGlAccounts.Where(p => leases != null && p.ChargeCode == leases.First().ChargeCode)
+                            .AsNoTracking()
+                            .Select(x => new ChargeAccountDto
+                            {
+                                ChargeCode = x.ChargeCode,
+                                ChargeDescription = x.ChargeDescription ?? string.Empty,
+                                AccountId = x.GlAccount,
+                                AccountName = x.GlAccountName ?? string.Empty,
+                                RevenueType = x.RevenueType ?? string.Empty
+                            })
+                            .Distinct()
+                            .OrderBy(x => x.ChargeCode)
+                            .ThenBy(x => x.AccountId)
+                            .ToListAsync();
+            }
             //==============================================================
             // Generate Budget Month by Month
             //==============================================================
