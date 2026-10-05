@@ -692,6 +692,7 @@ GenerateLeaseBudgetRequest request)
                 UnitId = request.UnitId
             };
 
+            List<ChargeAccountDto> ChargeCodes = new List<ChargeAccountDto>();
             var budgetStart = request.BudgetStartDate?.ToDateTime(TimeOnly.MinValue) ?? DateTime.MinValue;
             var budgetEnd = request.BudgetEndDate?.ToDateTime(TimeOnly.MaxValue) ?? DateTime.MaxValue;
 
@@ -716,43 +717,91 @@ GenerateLeaseBudgetRequest request)
                 .ToListAsync();
 
 
-            var ChargeCodes = await _context.ChargeCdGlAccounts.Where(p => leases != null && p.ChargeCode == leases.First().ChargeCode)
-            .AsNoTracking()
-            .Select(x => new ChargeAccountDto
-            {
-                ChargeCode = x.ChargeCode,
-                ChargeDescription = x.ChargeDescription ?? string.Empty,
-                AccountId = x.GlAccount,
-                AccountName = x.GlAccountName ?? string.Empty,
-                RevenueType = x.RevenueType ?? string.Empty
-            })
-            .Distinct()
-            .OrderBy(x => x.ChargeCode)
-            .ThenBy(x => x.AccountId)
-            .ToListAsync();
+            //ChargeCodes = await _context.ChargeCdGlAccounts.Where(p => leases != null && p.ChargeCode == leases.First().ChargeCode)
+            //.AsNoTracking()
+            //.Select(x => new ChargeAccountDto
+            //{
+            //    ChargeCode = x.ChargeCode,
+            //    ChargeDescription = x.ChargeDescription ?? string.Empty,
+            //    AccountId = x.GlAccount,
+            //    AccountName = x.GlAccountName ?? string.Empty,
+            //    RevenueType = x.RevenueType ?? string.Empty
+            //})
+            //.Distinct()
+            //.OrderBy(x => x.ChargeCode)
+            //.ThenBy(x => x.AccountId)
+            //.ToListAsync();
 
             //==============================================================
             // No Lease -> Use Market Rent
             //==============================================================
 
-            //if (!leases.Any())
+            if (!leases.Any())
             {
                 var unit = await _context.UnitMasters
                     .FirstOrDefaultAsync(x =>
                         x.PropertyId == request.PropertyId &&
                         x.UnitId == request.UnitId);
 
+              
+
+
+
                 if (unit != null)
                 {
+                    ChargeCodes = await _context.ChargeCdGlAccounts.Where(p => EF.Functions.ILike(p.ChargeCode, $"%{unit.UnitType}%"))
+                          .AsNoTracking()
+                            .Select(x => new ChargeAccountDto
+                            {
+                                ChargeCode = x.ChargeCode,
+                                ChargeDescription = x.ChargeDescription ?? string.Empty,
+                                AccountId = x.GlAccount,
+                                AccountName = x.GlAccountName ?? string.Empty,
+                                RevenueType = x.RevenueType ?? string.Empty
+                            })
+                            .Distinct()
+                            .OrderBy(x => x.ChargeCode)
+                            .ThenBy(x => x.AccountId)
+                            .ToListAsync();
                     templeases.Add(new LeaseMaster
                     {
                         LeaseId = "MARKET",
+
                         PropertyId = request.PropertyId,
                         UnitId = request.UnitId,
                         LeaseStartDate = DateOnly.FromDateTime(budgetStart),
                         LeaseEndDate = DateOnly.FromDateTime(budgetEnd),
                         ContractRent = unit.MarketRent ?? 0
                     });
+
+                    if(!ChargeCodes.Any())
+                    {
+                       ChargeCodes.Add(new ChargeAccountDto
+                       {
+                           ChargeCode = "br-res",
+                           ChargeDescription = "Base Rent - Residential",
+                           AccountId = "41000010",
+                           AccountName = "Base Rent - Residential",
+                           RevenueType = "RENT"
+                       });
+                    }
+                }
+                else
+                {
+                    ChargeCodes = await _context.ChargeCdGlAccounts.Where(p => leases != null && p.ChargeCode == leases.First().ChargeCode)
+                                .AsNoTracking()
+                                .Select(x => new ChargeAccountDto
+                                {
+                                    ChargeCode = x.ChargeCode,
+                                    ChargeDescription = x.ChargeDescription ?? string.Empty,
+                                    AccountId = x.GlAccount,
+                                    AccountName = x.GlAccountName ?? string.Empty,
+                                    RevenueType = x.RevenueType ?? string.Empty
+                                })
+                                .Distinct()
+                                .OrderBy(x => x.ChargeCode)
+                                .ThenBy(x => x.AccountId)
+                                .ToListAsync();
                 }
             }
 
