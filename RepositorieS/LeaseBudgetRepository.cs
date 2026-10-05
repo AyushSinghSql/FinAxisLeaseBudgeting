@@ -292,15 +292,23 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                 }
             }
 
-            return await (
+            var pageNumber = request.PageNumber <= 0
+    ? 1
+    : request.PageNumber;
+
+            var pageSize = request.PageSize <= 0
+                ? 50
+                : Math.Min(request.PageSize, 200);
+
+            var result = await (
                 from budget in query
 
-                join property in _context.PropertyMasters
+                join property in _context.PropertyMasters.AsNoTracking()
                     on budget.PropertyId equals property.PropertyId
                     into propertyJoin
                 from property in propertyJoin.DefaultIfEmpty()
 
-                join unit in _context.UnitMasters
+                join unit in _context.UnitMasters.AsNoTracking()
                     on budget.UnitId equals unit.UnitId
                     into unitJoin
                 from unit in unitJoin.DefaultIfEmpty()
@@ -311,7 +319,6 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
                 select new PlLeaseBudgetResponseDto
                 {
-
                     BudgetId = budget.BudgetId,
                     PropertyId = budget.PropertyId,
                     UnitId = budget.UnitId,
@@ -363,7 +370,83 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
                     Details = budget.Details
                 }
-            ).ToListAsync();
+            )
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+            return result;
+            //return await (
+            //    from budget in query
+
+            //    join property in _context.PropertyMasters
+            //        on budget.PropertyId equals property.PropertyId
+            //        into propertyJoin
+            //    from property in propertyJoin.DefaultIfEmpty()
+
+            //    join unit in _context.UnitMasters
+            //        on budget.UnitId equals unit.UnitId
+            //        into unitJoin
+            //    from unit in unitJoin.DefaultIfEmpty()
+
+            //    orderby budget.PropertyId,
+            //            budget.UnitId,
+            //            budget.GeneratedOn descending
+
+            //    select new PlLeaseBudgetResponseDto
+            //    {
+
+            //        BudgetId = budget.BudgetId,
+            //        PropertyId = budget.PropertyId,
+            //        UnitId = budget.UnitId,
+            //        LeaseId = budget.LeaseId,
+
+            //        BudgetYear = budget.BudgetYear,
+            //        BudgetVersion = budget.BudgetVersion,
+            //        BudgetType = budget.BudgetType,
+
+            //        TenantId = budget.TenantId,
+
+            //        GeneratedOn = budget.GeneratedOn,
+            //        GeneratedBy = budget.GeneratedBy,
+
+            //        FinalVersion = budget.FinalVersion,
+            //        IsCompleted = budget.IsCompleted,
+            //        IsApproved = budget.IsApproved,
+
+            //        Status = budget.Status,
+            //        Remarks = budget.Remarks,
+
+            //        TotalBudget = budget.TotalBudget,
+
+            //        CreatedAt = budget.CreatedAt,
+            //        UpdatedAt = budget.UpdatedAt,
+
+            //        StartDate = budget.StartDate,
+            //        EndDate = budget.EndDate,
+
+            //        AssumptionId = budget.AssumptionId,
+            //        IsManual = budget.IsManual,
+
+            //        RevenueSource = budget.RevenueSource,
+
+            //        ChargeCode = budget.ChargeCode,
+            //        AccountId = budget.AccountId,
+
+            //        PropertyName = property != null
+            //            ? property.PropertyName
+            //            : null,
+
+            //        PropertyCode = property != null
+            //            ? property.PropertyCode
+            //            : null,
+
+            //        UnitCode = unit != null
+            //            ? unit.UnitCode
+            //            : null,
+
+            //        Details = budget.Details
+            //    }
+            //).ToListAsync();
         }
 
         public async Task<LeaseBudgetResponse> GenerateRevenueBudgetAsync_Working(
