@@ -15,11 +15,53 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
         public LeaseMasterRepository(FinAxisDbContext context) => _context = context;
 
-        public async Task<PagedResponse<LeaseMaster>> GetLeasesAsync(string? searchTerm = null, int pageNumber = 0, int pageSize = 10)
+        public async Task<PagedResponse<LeaseMasterResponseDto>> GetLeasesAsync(string? searchTerm = null, int pageNumber = 0, int pageSize = 10)
         {
-            IQueryable<LeaseMaster> query = _context.LeaseMasters.AsNoTracking();
+            // Base query with joins to Property and Unit tables
+            var query = from lease in _context.LeaseMasters.AsNoTracking()
+                        join prop in _context.PropertyMasters.AsNoTracking()
+                            on lease.PropertyId equals prop.PropertyId into propGroup
+                        from p in propGroup.DefaultIfEmpty()
+                        join unit in _context.UnitMasters.AsNoTracking()
+                            on new { lease.PropertyId, lease.UnitId } equals new { unit.PropertyId, unit.UnitId } into unitGroup
+                        from u in unitGroup.DefaultIfEmpty()
+                        select new LeaseMasterResponseDto
+                        {
+                            // Map all existing LeaseMaster fields manually or via a mapper/initializer
+                            LeaseId = lease.LeaseId,
+                            TenantCode = lease.TenantCode,
+                            TenantName = lease.TenantName,
+                            PropertyId = lease.PropertyId,
+                            UnitId = lease.UnitId,
+                            LeaseStatus = lease.LeaseStatus,
+                            LeaseStartDate = lease.LeaseStartDate,
+                            LeaseEndDate = lease.LeaseEndDate,
+                            MoveInDate = lease.MoveInDate,
+                            MoveOutDate = lease.MoveOutDate,
+                            ContractRent = lease.ContractRent,
+                            ChargeCode = lease.ChargeCode,
+                            ChargeAmount = lease.ChargeAmount,
+                            ChargeFromDate = lease.ChargeFromDate,
+                            ChargeToDate = lease.ChargeToDate,
+                            BillingFrequency = lease.BillingFrequency,
+                            EscalationPercent = lease.EscalationPercent,
+                            EscalationAmount = lease.EscalationAmount,
+                            NextEscalationDate = lease.NextEscalationDate,
+                            SecurityDeposit = lease.SecurityDeposit,
+                            RenewalProbability = lease.RenewalProbability,
+                            LeaseType = lease.LeaseType,
+                            CreatedAt = lease.CreatedAt,
+                            CreatedBy = lease.CreatedBy,
+                            UpdatedAt = lease.UpdatedAt,
+                            UpdatedBy = lease.UpdatedBy,
 
-            // 1. Search Filter across string fields
+                            // Added Names
+                            PropertyName = p != null ? p.PropertyName : null,
+                            PropertyCode = p != null ? p.PropertyCode : null,
+                            UnitCode = u != null ? u.UnitCode : null
+                        };
+
+            // 1. Search Filter across string fields (including names if desired)
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 var search = searchTerm.Trim().ToLower();
@@ -29,6 +71,8 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                     (l.TenantName != null && l.TenantName.ToLower().Contains(search)) ||
                     l.PropertyId.ToLower().Contains(search) ||
                     l.UnitId.ToLower().Contains(search) ||
+                    (l.PropertyName != null && l.PropertyName.ToLower().Contains(search)) || // Optional: search by property name
+                    (l.UnitCode != null && l.UnitCode.ToLower().Contains(search)) ||         // Optional: search by unit name
                     (l.LeaseStatus != null && l.LeaseStatus.ToLower().Contains(search)) ||
                     (l.LeaseType != null && l.LeaseType.ToLower().Contains(search)) ||
                     (l.ChargeCode != null && l.ChargeCode.ToLower().Contains(search)) ||
@@ -37,7 +81,7 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             }
 
             int totalRecords = await query.CountAsync();
-            List<LeaseMaster> data;
+            List<LeaseMasterResponseDto> data;
             int totalPages = 1;
 
             // 2. Pagination Logic (pageNumber == 0 returns all data)
@@ -54,7 +98,7 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             else
             {
                 pageNumber = 0;
-                pageSize = totalRecords;
+                pageSize = totalRecords > 0 ? totalRecords : 1;
 
                 data = await query
                     .OrderByDescending(l => l.CreatedAt)
@@ -62,7 +106,7 @@ namespace FinAxisLeaseBudgeting.RepositorieS
             }
 
             // 3. Return generic response
-            return new PagedResponse<LeaseMaster>
+            return new PagedResponse<LeaseMasterResponseDto>
             {
                 Data = data,
                 TotalRecords = totalRecords,

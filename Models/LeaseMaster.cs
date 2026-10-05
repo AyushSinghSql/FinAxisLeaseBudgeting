@@ -87,6 +87,14 @@ namespace FinAxisLeaseBudgeting.Models
         public string? UpdatedBy { get; set; }
     }
 
+    public class LeaseMasterResponseDto : LeaseMaster
+    {
+        public string? PropertyName { get; set; }
+
+        public string? PropertyCode { get; set; }
+        public string? UnitCode { get; set; }
+    }
+
     public class LeaseFilterRequest
     {
         public string? EntityId { get; set; }

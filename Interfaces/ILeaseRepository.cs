@@ -5,6 +5,6 @@ namespace FinAxisLeaseBudgeting.Interfaces
 {
     public interface ILeaseRepository
     {
-        Task<PagedResponse<LeaseMaster>> GetLeasesAsync(string? searchTerm = null, int pageNumber = 0, int pageSize = 10);
+        Task<PagedResponse<LeaseMasterResponseDto>> GetLeasesAsync(string? searchTerm = null, int pageNumber = 0, int pageSize = 10);
     }
 }
