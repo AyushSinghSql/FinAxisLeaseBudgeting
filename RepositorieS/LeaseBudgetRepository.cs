@@ -267,37 +267,103 @@ namespace FinAxisLeaseBudgeting.RepositorieS
         }
 
 
-        public async Task<List<PlLeaseBudget>> GetBudgetsAsync(LeaseBudgetSearchRequest request)
+        public async Task<List<PlLeaseBudgetResponseDto>> GetBudgetsAsync(
+            LeaseBudgetSearchRequest request)
         {
-            var query = _context.PlLeaseBudgets.AsQueryable();
+            var query = _context.PlLeaseBudgets
+                .AsQueryable();
 
-            //=========================================
-            // Filter by Budget Type
-            //=========================================
             if (!string.IsNullOrWhiteSpace(request.BudgetType))
             {
-                query = query.Where(x => x.BudgetType.ToLower() == request.BudgetType.ToLower());
+                query = query.Where(x =>
+                    x.BudgetType.ToLower() == request.BudgetType.ToLower());
             }
 
-            //=========================================
-            // Filter by Property and Unit
-            //=========================================
             if (request.Properties != null)
             {
                 foreach (var property in request.Properties)
                 {
                     query = string.IsNullOrEmpty(property.UnitIds)
-                        ? query.Where(x => x.PropertyId == property.PropertyId)
-                        : query.Where(x => x.PropertyId == property.PropertyId &&
-                                           x.UnitId == property.UnitIds);
+                        ? query.Where(x =>
+                            x.PropertyId == property.PropertyId)
+                        : query.Where(x =>
+                            x.PropertyId == property.PropertyId &&
+                            x.UnitId == property.UnitIds);
                 }
             }
 
-            return await query
-                .OrderBy(x => x.PropertyId)
-                .ThenBy(x => x.UnitId)
-                .ThenByDescending(x => x.GeneratedOn)
-                .ToListAsync();
+            return await (
+                from budget in query
+
+                join property in _context.PropertyMasters
+                    on budget.PropertyId equals property.PropertyId
+                    into propertyJoin
+                from property in propertyJoin.DefaultIfEmpty()
+
+                join unit in _context.UnitMasters
+                    on budget.UnitId equals unit.UnitId
+                    into unitJoin
+                from unit in unitJoin.DefaultIfEmpty()
+
+                orderby budget.PropertyId,
+                        budget.UnitId,
+                        budget.GeneratedOn descending
+
+                select new PlLeaseBudgetResponseDto
+                {
+
+                    BudgetId = budget.BudgetId,
+                    PropertyId = budget.PropertyId,
+                    UnitId = budget.UnitId,
+                    LeaseId = budget.LeaseId,
+
+                    BudgetYear = budget.BudgetYear,
+                    BudgetVersion = budget.BudgetVersion,
+                    BudgetType = budget.BudgetType,
+
+                    TenantId = budget.TenantId,
+
+                    GeneratedOn = budget.GeneratedOn,
+                    GeneratedBy = budget.GeneratedBy,
+
+                    FinalVersion = budget.FinalVersion,
+                    IsCompleted = budget.IsCompleted,
+                    IsApproved = budget.IsApproved,
+
+                    Status = budget.Status,
+                    Remarks = budget.Remarks,
+
+                    TotalBudget = budget.TotalBudget,
+
+                    CreatedAt = budget.CreatedAt,
+                    UpdatedAt = budget.UpdatedAt,
+
+                    StartDate = budget.StartDate,
+                    EndDate = budget.EndDate,
+
+                    AssumptionId = budget.AssumptionId,
+                    IsManual = budget.IsManual,
+
+                    RevenueSource = budget.RevenueSource,
+
+                    ChargeCode = budget.ChargeCode,
+                    AccountId = budget.AccountId,
+
+                    PropertyName = property != null
+                        ? property.PropertyName
+                        : null,
+
+                    PropertyCode = property != null
+                        ? property.PropertyCode
+                        : null,
+
+                    UnitCode = unit != null
+                        ? unit.UnitCode
+                        : null,
+
+                    Details = budget.Details
+                }
+            ).ToListAsync();
         }
 
         public async Task<LeaseBudgetResponse> GenerateRevenueBudgetAsync_Working(
@@ -1766,59 +1832,97 @@ BulkUpdateLeaseRevenueRequest request)
         public async Task<LeaseBudgetDto?> GetBudgetByIdAsync(long budgetId)
         {
             var budget = await _context.PlLeaseBudgets
+                .AsNoTracking()
                 .Include(x => x.Details)
                 .FirstOrDefaultAsync(x => x.BudgetId == budgetId);
 
             if (budget == null)
                 return null;
 
+            // Get Property details
+            var property = await _context.PropertyMasters
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.PropertyId == budget.PropertyId);
+
+            // Get Unit details
+            var unit = await _context.UnitMasters
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.UnitId == budget.UnitId);
+
             return new LeaseBudgetDto
             {
+                // =========================================
+                // Budget
+                // =========================================
+
                 BudgetId = budget.BudgetId,
+
                 PropertyId = budget.PropertyId,
+                PropertyName = property?.PropertyName,
+                PropertyCode = property?.PropertyCode,
+
                 UnitId = budget.UnitId,
+                UnitCode = unit?.UnitCode,
+
                 LeaseId = budget.LeaseId,
+
                 Version = budget.BudgetVersion,
                 BudgetType = budget.BudgetType,
+
                 BudgetStart = budget.StartDate,
                 BudgetEnd = budget.EndDate,
+
                 Status = budget.Status,
+
+                // =========================================
+                // Groups / Details
+                // =========================================
+
                 Groups = budget.Details
-                    .GroupBy(x => new { x.ChargeCode, x.AccountId })
+                    .GroupBy(x => new
+                    {
+                        x.ChargeCode,
+                        x.AccountId
+                    })
                     .Select(g => new LeaseBudgetChargeGroupDto
                     {
                         ChargeCode = g.Key.ChargeCode,
                         AccountId = g.Key.AccountId,
-                        Details = g.OrderBy(x => x.BudgetYear)
-                                   .ThenBy(x => x.BudgetMonth)
-                                   .Select(d => new LeaseBudgetDetailDto
-                                   {
-                                       DetailId = d.DetailId,
-                                       BudgetMonth = d.BudgetMonth,
-                                       BudgetYear = d.BudgetYear,
-                                       BaseRent = d.BaseRent,
-                                       //CamRecovery = d.CamRecovery,
-                                       //TaxRecovery = d.TaxRecovery,
-                                       //InsuranceRecovery = d.InsuranceRecovery,
-                                       //ParkingIncome = d.ParkingIncome,
-                                       //StorageIncome = d.StorageIncome,
-                                       //PercentageRent = d.PercentageRent,
-                                       //MiscIncome = d.MiscIncome,
-                                       //RentAdjustment = d.RentAdjustment,
-                                       //FreeRent = d.FreeRent,
-                                       //RentAbatement = d.RentAbatement,
-                                       //VacancyLoss = d.VacancyLoss,
-                                       //BadDebt = d.BadDebt,
-                                       //TotalRevenue = d.TotalRevenue,
-                                       //OccupiedDays = d.OccupiedDays,
-                                       //DaysInMonth = d.DaysInMonth,
-                                       //ProrationFactor = d.ProrationFactor
-                                   })
-                                   .ToList()
+
+                        Details = g
+                            .OrderBy(x => x.BudgetYear)
+                            .ThenBy(x => x.BudgetMonth)
+                            .Select(d => new LeaseBudgetDetailDto
+                            {
+                                DetailId = d.DetailId,
+                                BudgetMonth = d.BudgetMonth,
+                                BudgetYear = d.BudgetYear,
+
+                                BaseRent = d.BaseRent,
+
+                                // CamRecovery = d.CamRecovery,
+                                // TaxRecovery = d.TaxRecovery,
+                                // InsuranceRecovery = d.InsuranceRecovery,
+                                // ParkingIncome = d.ParkingIncome,
+                                // StorageIncome = d.StorageIncome,
+                                // PercentageRent = d.PercentageRent,
+                                // MiscIncome = d.MiscIncome,
+                                // RentAdjustment = d.RentAdjustment,
+                                // FreeRent = d.FreeRent,
+                                // RentAbatement = d.RentAbatement,
+                                // VacancyLoss = d.VacancyLoss,
+                                // BadDebt = d.BadDebt,
+                                // TotalRevenue = d.TotalRevenue,
+                                // OccupiedDays = d.OccupiedDays,
+                                // DaysInMonth = d.DaysInMonth,
+                                // ProrationFactor = d.ProrationFactor
+                            })
+                            .ToList()
                     })
                     .ToList()
             };
         }
+
 
         public async Task BulkUpsertAsync(List<PlLeaseBudgetDetail> details)
         {

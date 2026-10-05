@@ -107,7 +107,7 @@ namespace FinAxisLeaseBudgeting.Controllers
 
 
 
-            List<PlLeaseBudget> budgets = new List<PlLeaseBudget>();
+            List<PlLeaseBudgetResponseDto> budgets = new List<PlLeaseBudgetResponseDto>();
             var searchRequest = new LeaseBudgetSearchRequest
             {
                 BudgetType = BudgetType,

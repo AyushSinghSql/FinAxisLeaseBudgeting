@@ -173,6 +173,8 @@ namespace FinAxisLeaseBudgeting.Models
     }
 
 
+
+
     [Table("pl_lease_budget_detail")]
     public class PlLeaseBudgetDetail
     {
@@ -365,13 +367,22 @@ namespace FinAxisLeaseBudgeting.Models
     public class LeaseBudgetDto
     {
         public long BudgetId { get; set; }
+
         public string PropertyId { get; set; }
+        public string? PropertyName { get; set; }
+        public string? PropertyCode { get; set; }
+
         public string UnitId { get; set; }
+        public string? UnitCode { get; set; }
+
         public string LeaseId { get; set; }
+
         public int Version { get; set; }
         public string BudgetType { get; set; }
+
         public DateOnly BudgetStart { get; set; }
         public DateOnly BudgetEnd { get; set; }
+
         public string Status { get; set; }
 
         public List<LeaseBudgetChargeGroupDto> Groups { get; set; } = new();
@@ -384,5 +395,12 @@ namespace FinAxisLeaseBudgeting.Models
         public List<LeaseBudgetDetailDto> Details { get; set; } = new();
     }
 
-    
+    public class PlLeaseBudgetResponseDto : PlLeaseBudget
+    {
+        public string? PropertyName { get; set; }
+        public string? PropertyCode { get; set; }
+        public string? UnitCode { get; set; }
+    }
+
+
 }
