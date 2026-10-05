@@ -549,19 +549,7 @@ GenerateLeaseBudgetRequest request)
             var LeaseStart = request.LeaseStartDate?.ToDateTime(TimeOnly.MinValue) ?? DateTime.MinValue;
             var LeaseEnd = request.LeaseEndDate?.ToDateTime(TimeOnly.MaxValue) ?? DateTime.MaxValue;
 
-            var ChargeCodes = await _context.ChargeCdGlAccounts
-                        .AsNoTracking()
-                        .Select(x => new ChargeAccountDto
-                        {
-                            ChargeCode = x.ChargeCode,
-                            ChargeDescription = x.ChargeDescription ?? string.Empty,
-                            AccountId = x.GlAccount,
-                            AccountName = x.GlAccountName ?? string.Empty
-                        })
-                        .Distinct()
-                        .OrderBy(x => x.ChargeCode)
-                        .ThenBy(x => x.AccountId)
-                        .ToListAsync();
+
 
             //==============================================================
             // Load all leases overlapping the budget period
@@ -577,6 +565,22 @@ GenerateLeaseBudgetRequest request)
                     x.LeaseEndDate >= DateOnly.FromDateTime(LeaseStart))
                 .OrderBy(x => x.LeaseStartDate)
                 .ToListAsync();
+
+
+            var ChargeCodes = await _context.ChargeCdGlAccounts.Where(p => leases != null && p.ChargeCode == leases.First().ChargeCode)
+            .AsNoTracking()
+            .Select(x => new ChargeAccountDto
+            {
+                ChargeCode = x.ChargeCode,
+                ChargeDescription = x.ChargeDescription ?? string.Empty,
+                AccountId = x.GlAccount,
+                AccountName = x.GlAccountName ?? string.Empty,
+                RevenueType = x.RevenueType ?? string.Empty
+            })
+            .Distinct()
+            .OrderBy(x => x.ChargeCode)
+            .ThenBy(x => x.AccountId)
+            .ToListAsync();
 
             //==============================================================
             // No Lease -> Use Market Rent
@@ -669,7 +673,8 @@ GenerateLeaseBudgetRequest request)
                             BudgetYear = currentMonth.Year,
                             Month = monthStart.ToString("MMM yyyy"),
                             AccountId = charge.AccountId,
-                            ChargeCode = charge.ChargeCode
+                            ChargeCode = charge.ChargeCode,
+                            RevenueType = charge.RevenueType
                         };
 
                         foreach (var lease in leases)
@@ -703,7 +708,8 @@ GenerateLeaseBudgetRequest request)
                             }
 
 
-                            switch (charge.ChargeCode.ToUpper())
+                            //switch (charge.ChargeCode.ToUpper())
+                            switch (charge.RevenueType.ToUpper())
                             {
                                 case "RENT":
                                     monthBudget.BaseRent = revenue.BaseRent;
@@ -815,6 +821,7 @@ GenerateLeaseBudgetRequest request)
 
             var ChargeCodes = await _context.ChargeCdGlAccounts
                         .AsNoTracking()
+                        .Where(x => x.GlAccount != null && x.RevenueType != null)
                         .Select(x => new ChargeAccountDto
                         {
                             ChargeCode = x.ChargeCode,
@@ -939,7 +946,7 @@ GenerateLeaseBudgetRequest request)
                         if (lease.LeaseEndDate < DateOnly.FromDateTime(monthStart))
                             continue;
 
-                        switch (charge.ChargeCode.ToUpper())
+                        switch (charge.RevenueType.ToUpper())
                         {
                             case "RENT":
                                 monthBudget.BaseRent = revenue.BaseRent;
@@ -1093,7 +1100,7 @@ DateOnly budgetMonth)
                 return result;
             }
 
-            if (assumptions.BaseRentEscalation > 0)
+            if (assumptions != null && assumptions.BaseRentEscalation > 0)
             {
                 baseRent +=
                     baseRent *
@@ -1111,12 +1118,15 @@ DateOnly budgetMonth)
                 : 0;
 
 
-            cam +=
+            if (assumptions != null && assumptions.CamGrowth > 0)
+            {
+
+                cam +=
                 cam *
                 assumptions.CamGrowth /
                 100;
 
-
+            }
 
             //-------------------------------------
             // Tax
@@ -1124,27 +1134,30 @@ DateOnly budgetMonth)
 
             decimal tax = 0;
 
+            if (assumptions != null && assumptions.TaxGrowth > 0)
+            {
 
-            tax +=
+                tax +=
                 tax *
                 assumptions.TaxGrowth /
                 100;
 
-
+            }
 
             //-------------------------------------
             // Insurance
             //-------------------------------------
 
             decimal insurance = 0;
+            if (assumptions != null && assumptions.InsuranceGrowth > 0)
+            {
 
-
-            insurance +=
+                insurance +=
                 insurance *
                 assumptions.InsuranceGrowth /
                 100;
 
-
+            }
 
             //-------------------------------------
             // Parking
@@ -1152,13 +1165,14 @@ DateOnly budgetMonth)
 
             decimal parking = 0;
 
-
-            parking +=
+            if (assumptions != null && assumptions.ParkingGrowth > 0)
+            {
+                parking +=
                 parking *
                 assumptions.ParkingGrowth /
                 100;
 
-
+            }
 
             //-------------------------------------
             // Free Rent
@@ -1167,7 +1181,7 @@ DateOnly budgetMonth)
             decimal freeRent = 0;
 
 
-            if (assumptions.FreeRentMonths > 0 &&
+            if (assumptions != null && assumptions.FreeRentMonths > 0 &&
                budgetMonth.Month <= assumptions.FreeRentMonths)
             {
                 freeRent = baseRent;
@@ -1186,13 +1200,15 @@ DateOnly budgetMonth)
                 insurance +
                 parking;
 
-
-            decimal badDebt =
+            decimal badDebt = 0;
+            if (assumptions != null && assumptions.BadDebt > 0)
+            {
+                badDebt =
                 grossRevenue *
                 assumptions.BadDebt /
                 100;
 
-
+            }
 
             //-------------------------------------
             // Result

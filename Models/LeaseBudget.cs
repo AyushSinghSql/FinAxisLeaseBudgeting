@@ -52,6 +52,7 @@ namespace FinAxisLeaseBudgeting.Models
         public decimal? BadDebt { get; set; }
 
         public decimal? TotalRevenue { get; set; }
+        public string? RevenueType { get; set; }
 
 
     }

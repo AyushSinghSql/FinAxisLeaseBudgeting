@@ -59,8 +59,8 @@ namespace FinAxisLeaseBudgeting.Data
                 entity.HasKey(e => new
                 {
                     e.ChargeCode,
-                    e.GlAccount,
-                    e.RevenueType
+                    //e.GlAccount,
+                    //e.RevenueType
                 });
             });
 

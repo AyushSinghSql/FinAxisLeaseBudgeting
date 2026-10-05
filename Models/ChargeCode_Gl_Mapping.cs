@@ -14,12 +14,12 @@ namespace FinAxisLeaseBudgeting.Models
         [Key]
         [Column("gl_account", Order = 1)]
         [StringLength(50)]
-        public string GlAccount { get; set; } = string.Empty;
+        public string? GlAccount { get; set; } = string.Empty;
 
         [Key]
         [Column("revenue_type", Order = 2)]
         [StringLength(20)]
-        public string RevenueType { get; set; } = string.Empty;
+        public string? RevenueType { get; set; } = string.Empty;
 
         [Column("charge_description")]
         [StringLength(250)]
@@ -50,8 +50,9 @@ namespace FinAxisLeaseBudgeting.Models
 
         public string ChargeDescription { get; set; } = string.Empty;
 
-        public string AccountId { get; set; } = string.Empty;
+        public string? AccountId { get; set; } = string.Empty;
 
-        public string AccountName { get; set; } = string.Empty;
+        public string? AccountName { get; set; } = string.Empty;
+        public string? RevenueType { get; set; } = string.Empty;
     }
 }
