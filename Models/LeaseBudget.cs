@@ -168,6 +168,11 @@ namespace FinAxisLeaseBudgeting.Models
         [NotMapped]
         public string? AccountId { get; set; }
 
+        [NotMapped]
+        public string? PropertyCode { get; set; }
+        [NotMapped]
+        public string? PropertyName { get; set; }
+
         public ICollection<PlLeaseBudgetDetail> Details { get; set; }
             = new List<PlLeaseBudgetDetail>();
     }

@@ -3,8 +3,11 @@ using FinAxisLeaseBudgeting.Interfaces;
 using FinAxisLeaseBudgeting.Models;
 using FinAxisLeaseBudgeting.Repositories;
 using FinAxisLeaseBudgeting.Services;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Globalization;
+using System.Linq.Expressions;
 
 namespace FinAxisLeaseBudgeting.RepositorieS
 {
@@ -79,15 +82,67 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
         public async Task<List<LeaseBudgetDto>> SearchAsyncV1(LeaseBudgetSearchRequest request)
         {
-            var budgets = await _context.PlLeaseBudgets
+            var query = _context.PlLeaseBudgets
                 .Include(x => x.Details)
-                .ToListAsync();
+                .AsQueryable();
 
-            var result = budgets
-                .Where(x => request.Properties.Any(p =>
-                    p.PropertyId == x.PropertyId &&
-                    p.UnitIds == x.UnitId))
-                .ToList();
+            if (request.Properties != null && request.Properties.Any())
+            {
+                var parameter = Expression.Parameter(
+                    typeof(PlLeaseBudget),
+                    "x");
+
+                Expression? body = null;
+
+                foreach (var filter in request.Properties)
+                {
+                    var propertyExpression = Expression.Equal(
+                        Expression.Property(
+                            parameter,
+                            nameof(PlLeaseBudget.PropertyId)),
+                        Expression.Constant(filter.PropertyId)
+                    );
+
+                    Expression condition;
+
+                    // Property only
+                    if (string.IsNullOrWhiteSpace(filter.UnitIds))
+                    {
+                        condition = propertyExpression;
+                    }
+                    else
+                    {
+                        var unitExpression = Expression.Equal(
+                            Expression.Property(
+                                parameter,
+                                nameof(PlLeaseBudget.UnitId)),
+                            Expression.Constant(filter.UnitIds)
+                        );
+
+                        condition = Expression.AndAlso(
+                            propertyExpression,
+                            unitExpression);
+                    }
+
+                    // Combine conditions using OR
+                    body = body == null
+                        ? condition
+                        : Expression.OrElse(body, condition);
+                }
+
+                if (body != null)
+                {
+                    var lambda =
+                        Expression.Lambda<Func<PlLeaseBudget, bool>>(
+                            body,
+                            parameter);
+
+                    query = query.Where(lambda);
+                }
+            }
+
+            var result = await query.ToListAsync();
+
 
             var keys = request.Properties
                 .Select(p => $"{p.PropertyId}|{p.UnitIds}")
@@ -97,12 +152,18 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                 .Where(x => keys.Contains(x.PropertyId + "|" + x.UnitId))
                 .ToDictionaryAsync(x => x.PropertyId + "|" + x.UnitId, x => x.TenantCode);
 
+            var properties = await _context.PropertyMasters
+                .Where(x => result.Select(b => b.PropertyId).Contains(x.PropertyId))
+                .ToDictionaryAsync(x => x.PropertyId, x => x);
+
             foreach (var budget in result)
             {
                 var detail = budget.Details.FirstOrDefault();
                 budget.TenantId = leases.GetValueOrDefault($"{budget.PropertyId}|{budget.UnitId}");
                 budget.ChargeCode = detail?.ChargeCode;
                 budget.AccountId = detail?.AccountId;
+                budget.PropertyCode = properties.TryGetValue(budget.PropertyId, out var prop) ? prop.PropertyCode : null;
+                budget.PropertyName = properties.TryGetValue(budget.PropertyId, out prop) ? prop.PropertyName : null;
             }
 
             // Add units without budgets
@@ -127,7 +188,9 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                         TotalBudget = 0,
                         Details = new List<PlLeaseBudgetDetail>(),
                         ChargeCode = null,
-                        AccountId = null
+                        AccountId = null,
+                        PropertyCode = properties.TryGetValue(property.PropertyId, out var prop) ? prop.PropertyCode : null,
+                        PropertyName = properties.TryGetValue(property.PropertyId, out prop) ? prop.PropertyName : null
                     });
                 }
             }
@@ -138,6 +201,8 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                 PropertyId = budget.PropertyId,
                 UnitId = budget.UnitId,
                 LeaseId = budget.LeaseId,
+                PropertyCode = budget.PropertyCode,
+                PropertyName = budget.PropertyName,
                 Version = budget.BudgetVersion,
                 BudgetType = budget.BudgetType,
                 BudgetStart = budget.StartDate,
