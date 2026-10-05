@@ -6,7 +6,8 @@
         public string Property { get; set; } = string.Empty;
         public string Book { get; set; } = "Budget 25";
         public string BudgetDates { get; set; } = "1/2025 - 12/2025";
-        public string ModelProperty { get; set; } = string.Empty;
+        //public string ModelProperty { get; set; } = string.Empty;
+        public string PropertyCode { get; set; } = string.Empty;
         public string CurrencyArea { get; set; } = "inr |";
         public string MarketType { get; set; } = "Commercial";
         public string ForecastMonth { get; set; } = "01/2025";
