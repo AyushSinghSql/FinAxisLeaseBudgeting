@@ -223,6 +223,7 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                 {
                     Property = p.PropertyId,
                     ModelProperty = p.PropertyCode,
+                    PropertyCode = p.PropertyCode,
                     //Property = p.PropertyCode,
                     //ModelProperty = p.PropertyId,
                     PropName = p.PropertyName,
