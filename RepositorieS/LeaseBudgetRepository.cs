@@ -344,6 +344,13 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                     x.BudgetType.ToLower() == request.BudgetType.ToLower());
             }
 
+            if (!string.IsNullOrWhiteSpace(request.EntityId))
+            {
+                query = query.Where(x =>
+                    x.EntityId == request.EntityId);
+            }
+
+
             if (request.Properties != null)
             {
                 foreach (var property in request.Properties)
@@ -1921,6 +1928,7 @@ BulkUpdateLeaseRevenueRequest request)
         {
             using var tran = await _context.Database.BeginTransactionAsync();
 
+            var property = await _context.PropertyMasters.AsNoTracking().FirstOrDefaultAsync(p => p.PropertyId == propertyId);
 
             int? lastVersion = await _context.PlLeaseBudgets.Where(p => p.PropertyId == propertyId && p.UnitId == unitId).OrderByDescending(p => p.BudgetVersion).Select(p => (int?)p.BudgetVersion).FirstOrDefaultAsync();
             version = (lastVersion ?? 0) + 1;
@@ -1934,7 +1942,7 @@ BulkUpdateLeaseRevenueRequest request)
                 BudgetYear = response.BudgetYear,
                 BudgetVersion = version,
                 BudgetType = budgetType,
-
+                EntityId = property?.EntityId,
                 GeneratedBy = generatedBy,
                 GeneratedOn = DateTime.UtcNow,
                 StartDate = startDate ?? DateOnly.MinValue,

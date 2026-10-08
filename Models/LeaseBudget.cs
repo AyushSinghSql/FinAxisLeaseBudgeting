@@ -162,6 +162,10 @@ namespace FinAxisLeaseBudgeting.Models
         [StringLength(30)]
         public string? RevenueSource { get; set; }
 
+        [Column("entity_id")]
+        [StringLength(30)]
+        public string? EntityId { get; set; }
+
         [NotMapped]
         public string? ChargeCode { get; set; }
 
@@ -271,11 +275,14 @@ namespace FinAxisLeaseBudgeting.Models
         public string? BudgetType { get; set; }
 
         public List<PropertyUnitSearch> Properties { get; set; } = new();
+        public string? EntityId { get; internal set; }
+        public string? LeaseId { get; internal set; }
     }
 
     public class PropertyUnitSearch
     {
         public string PropertyId { get; set; }
+        public string EntityId { get; set; }
 
         public string UnitIds { get; set; }
     }

@@ -101,15 +101,14 @@ namespace FinAxisLeaseBudgeting.Controllers
         //}
 
         [HttpGet("GetBudgets")]
-        public async Task<IActionResult> GetBudgets([FromQuery] string? PropertyId, [FromQuery] string? UnitId, [FromQuery] string? BudgetType)
+        public async Task<IActionResult> GetBudgets([FromQuery] string? PropertyId, [FromQuery] string? UnitId, [FromQuery] string? EntityId, [FromQuery] string? LeaseId, [FromQuery] string? BudgetType)
         {
-
-
-
 
             List<PlLeaseBudgetResponseDto> budgets = new List<PlLeaseBudgetResponseDto>();
             var searchRequest = new LeaseBudgetSearchRequest
             {
+                EntityId = EntityId,
+                LeaseId = LeaseId,
                 BudgetType = BudgetType,
                 Properties = string.IsNullOrWhiteSpace(PropertyId) &&
                              string.IsNullOrWhiteSpace(UnitId)
