@@ -91,10 +91,12 @@ namespace FinAxisLeaseBudgeting.RepositorieS
 
         public async Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownByUserAsync(
             int userId,
-            string? searchTerm = null,
-            string? userRole = null)
+            string? searchTerm = null)
         {
             IQueryable<PropertyMaster> query;
+
+            var user = await _context.Users.AsNoTracking().Include(p=>p.UserRole).FirstOrDefaultAsync(u => u.UserId == userId);
+            string userRole = user?.UserRole?.RoleName ?? string.Empty;
 
             bool isAdmin = string.Equals(
                 userRole,
