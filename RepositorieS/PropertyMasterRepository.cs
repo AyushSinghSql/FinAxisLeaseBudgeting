@@ -90,26 +90,42 @@ namespace FinAxisLeaseBudgeting.RepositorieS
         }
 
         public async Task<IEnumerable<PropertyDropdownDto>> GetPropertyDropdownByUserAsync(
-      int userId,
-      string? searchTerm = null)
+            int userId,
+            string? searchTerm = null,
+            string? userRole = null)
         {
-            var query =
-                from ups in _context.UserPropertySecurities.AsNoTracking()
-                join p in _context.PropertyMasters.AsNoTracking()
-                    on ups.PropertyId equals p.PropertyId
-                where ups.UserId == userId
-                      && ups.IsActive
-                select p;
+            IQueryable<PropertyMaster> query;
+
+            bool isAdmin = string.Equals(
+                userRole,
+                "admin",
+                StringComparison.OrdinalIgnoreCase);
+
+            if (isAdmin)
+            {
+                query = _context.PropertyMasters.AsNoTracking();
+            }
+            else
+            {
+                query =
+                    from p in _context.PropertyMasters.AsNoTracking()
+                    join ups in _context.UserPropertySecurities.AsNoTracking()
+                        on p.PropertyId equals ups.PropertyId
+                    where ups.UserId == userId && ups.IsActive
+                    select p;
+
+                query = query.Distinct();
+            }
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                var search = searchTerm.Trim().ToLower();
+                var search = searchTerm.Trim();
 
                 query = query.Where(p =>
-                    p.PropertyId.ToLower().Contains(search) ||
-                    p.PropertyCode.ToLower().Contains(search) ||
-                    p.PropertyName.ToLower().Contains(search) ||
-                    p.EntityId.Contains(search));
+                    EF.Functions.ILike(p.PropertyId, $"%{search}%") ||
+                    EF.Functions.ILike(p.PropertyCode, $"%{search}%") ||
+                    EF.Functions.ILike(p.PropertyName, $"%{search}%") ||
+                    EF.Functions.ILike(p.EntityId, $"%{search}%"));
             }
 
             return await query
@@ -120,7 +136,6 @@ namespace FinAxisLeaseBudgeting.RepositorieS
                     PropertyCode = p.PropertyCode,
                     PropertyName = p.PropertyName
                 })
-                .Distinct()
                 .ToListAsync();
         }
 

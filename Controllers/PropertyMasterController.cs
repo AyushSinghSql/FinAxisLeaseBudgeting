@@ -32,6 +32,15 @@ namespace FinAxisLeaseBudgeting.Controllers
             return Ok(result);
         }
 
+        [HttpGet("dropdown-by-user")]
+        public async Task<IActionResult> GetPropertyDropdownByUser(
+    [FromQuery] int userId, [FromQuery] int userRole,
+    [FromQuery] string? searchTerm = null)
+        {
+            var result = await _propertyService.GetPropertyDropdownByUserAsync(userId, searchTerm);
+            return Ok(result);
+        }
+
         [HttpGet("properties")]
         public async Task<IActionResult> GetProperties(
             [FromQuery] string? searchTerm = null,

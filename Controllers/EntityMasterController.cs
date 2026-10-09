@@ -34,6 +34,7 @@ namespace PlanningAPI.Controllers
                 .Select(x => new 
                 {
                     Id = x.EntityId,
+                    Code = x.EntityCode,
                     Name = x.EntityName
                 })
                 .ToListAsync();
